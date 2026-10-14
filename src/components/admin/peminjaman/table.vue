@@ -99,12 +99,14 @@ const hapusPeminjaman = (item) => {
                         <TableCell class="px-10 w-30">{{ id.id }}</TableCell>
                         <TableCell class="w-45">{{ id.peminjaman }}</TableCell>
                         <TableCell class="w-40">{{ id.alat }}</TableCell>
-                        <TableCell class="">{{ id.tanggal }}</TableCell>
+                        <TableCell>{{ id.tanggal }}</TableCell>
                         <TableCell>{{ id.jumlah }}</TableCell>
                         <TableCell>
                             <span :class="{
-                                'text-[#0284C7]': id.status === 'Tersedia',
-                                'text-[#DC2626]': id.status === 'Habis',
+                                'text-[#BA3800]': id.status === 'Menunggu',
+                                'text-[#03543F]': id.status === 'Disetujui',
+                                'text-[#9B1C1C]': id.status === 'Ditolak',
+                                'text-[#1E429F]': id.status === 'Dipinjam',
                             }">
                                 {{ id.status }}
                             </span>

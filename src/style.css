@@ -139,3 +139,16 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Sembunyikan scrollbar di semua halaman */
+* {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer */
+}
+
+/* Chrome, Edge, dan Safari */
+*::-webkit-scrollbar {
+  display: none;
+}

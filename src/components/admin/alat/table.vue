@@ -20,6 +20,11 @@ import {
 
 import Button from '@/components/ui/button/Button.vue';
 import { Eye, Pencil, Trash2 } from 'lucide-vue-next'
+import DetailAlat from '@/components/admin/alat/alat-detail.vue'
+import { ref } from 'vue'
+
+const modalTerbuka = ref(false)
+const alatTerpilih = ref(null)
 
 const alat = [
     { 
@@ -57,15 +62,16 @@ const alat = [
 ]
 
 const detailAlat = (item) => {
-    console.log('Edit:', item.nama)
+    alatTerpilih.value = item
+    modalTerbuka.value = true
 }
 
 const editAlat = (item) => {
-    console.log('Edit:', item.nama)
+    console.log('Edit:', item.nama_alat)
 }
 
 const hapusAlat = (item) => {
-    console.log('Hapus:', item.nama)
+    console.log('Hapus:', item.nama_alat)
 }
 </script>
 
@@ -117,8 +123,8 @@ const hapusAlat = (item) => {
                             <div class="flex justify-center items-right gap-2">
                                 <Button
                                     size="icon"
-                                    class="bg-[#DEF7EC] rounded-full hover:bg-[#d2e7fd]"
-                                    @click="detailAlat(item)"
+                                    class="rounded-full bg-[#DEF7EC] hover:bg-[#d2e7fd]"
+                                    @click="detailAlat(kode_alat)"
                                 >
                                     <Eye class="h-4 w-4 text-[#03543F]" />
                                 </Button>
@@ -126,7 +132,7 @@ const hapusAlat = (item) => {
                                 <Button
                                     size="icon"
                                     class="bg-[#E1EFFE] rounded-full hover:bg-[#d2e7fd]"
-                                    @click="editAlat(item)"
+                                    @click="editAlat(kode_alat)"
                                 >
                                     <Pencil class="h-4 w-4 text-[#0284C7]" />
                                 </Button>
@@ -134,7 +140,7 @@ const hapusAlat = (item) => {
                                 <Button
                                     size="icon"
                                     class="bg-[#FEE2E2] rounded-full hover:bg-[#fdd5d5]"
-                                    @click="hapusAlat(item)"
+                                    @click="hapusAlat(kode_alat)"
                                 >
                                     <Trash2 class="h-4 w-4 text-[#DC2626]" />
                                 </Button>
@@ -175,4 +181,8 @@ const hapusAlat = (item) => {
         </div>
     </div>
 
+<DetailAlat
+    v-model:open="modalTerbuka"
+    :alat="alatTerpilih"
+/>
 </template>

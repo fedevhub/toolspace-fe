@@ -3,6 +3,9 @@
     import { Input } from '@/components/ui/input';
     import { Plus, Search } from 'lucide-vue-next';
     import Button from '@/components/ui/button/Button.vue';
+    import { useRouter } from 'vue-router'
+    const router = useRouter()
+
 </script>
 
 <template>
@@ -24,9 +27,10 @@
             </div>
 
             <div class="ml-auto">
-                <Button>
+                <Button @click="router.push('/admin/pengguna-form')">
                     <Plus :size="20" /> Tambah Pengguna
                 </Button>
+
             </div>
         </div>
         <Table />
