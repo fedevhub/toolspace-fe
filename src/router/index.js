@@ -8,8 +8,11 @@ import Kategori from '@/views/admin/Kategori.vue'
 import Peminjaman from '@/views/admin/Peminjaman.vue'
 import Pengembalian from '@/views/admin/Pengembalian.vue'
 import LogAktivitas from '@/views/admin/Log-Aktivitas.vue'
-import PenggunaForm from '@/components/admin/pengguna/pengguna-form.vue'
-import AlatForm from '@/components/admin/alat/alat-form.vue'
+import PenggunaForm from '@/components/admin/pengguna/form.vue'
+import AlatForm from '@/components/admin/alat/form.vue'
+import KategoriForm from '@/components/admin/kategori/form.vue'
+import PeminjamanForm from '@/components/admin/peminjaman/form.vue'
+import PengembalianForm from '@/components/admin/pengembalian/form.vue'
 import Login from '@/views/auth/Login.vue'
 
 const routes = [
@@ -110,7 +113,6 @@ const routes = [
 
     {
         path: '/admin',
-        component: AdminLayout,
         children: [
             {
                 path: 'pengguna-form',
@@ -122,7 +124,6 @@ const routes = [
 
     {
         path: '/admin',
-        component: AdminLayout,
         children: [
             {
                 path: 'alat-form',
@@ -131,6 +132,42 @@ const routes = [
             }
         ]
     },
+
+    {
+        path: '/admin',
+        component: AdminLayout,
+        children: [
+            {
+                path: 'kategori-form',
+                name: 'admin-kategori-form',
+                component: KategoriForm
+            }
+        ]
+    },
+
+    {
+        path: '/admin',
+        children: [
+            {
+                path: 'peminjaman-form',
+                name: 'admin-peminjaman-form',
+                component: PeminjamanForm
+            }
+        ]
+    },
+
+    {
+        path: '/admin',
+        children: [
+            {
+                path: 'pengembalian-form',
+                name: 'admin-pengembalian-form',
+                component: PengembalianForm
+            }
+        ]
+    },
+
+
 ]
 
 const router = createRouter({

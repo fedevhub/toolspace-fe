@@ -26,7 +26,7 @@ const emit = defineEmits(['update:open'])
         @update:open="emit('update:open', $event)"
     >
         <DialogContent
-            class="sm:max-w-[900px] w-[95vw] p-0 gap-0 overflow-hidden rounded-[24px] border border-gray-300"
+            class="sm:max-w-[850px] w-[95vw] p-0 gap-0 overflow-hidden rounded-[24px] border border-gray-300"
             :show-close-button="false"
         >
             <!-- Header -->
@@ -51,7 +51,7 @@ const emit = defineEmits(['update:open'])
                 class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 md:gap-12 p-8 md:p-10"
             >
                 <div
-                    class="flex items-center justify-center w-full h-[260px] rounded-[24px] border-[10px] border-gray-100 overflow-hidden"
+                    class="flex items-center justify-center w-full h-[280px] rounded-[24px] border-[10px] border-gray-100 overflow-hidden"
                 >
                     <img
                         v-if="alat.gambar"

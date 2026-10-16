@@ -3,6 +3,17 @@
     import { Input } from '@/components/ui/input';
     import { Plus, Search } from 'lucide-vue-next';
     import Button from '@/components/ui/button/Button.vue';
+    import { useRouter } from 'vue-router'
+    import KategoriForm from '@/components/admin/kategori/form.vue'
+    import { ref } from 'vue'
+
+    const kategoriTerpilih = ref(null)
+    const dialogOpen = ref(false)
+
+    function kategoriForm() {
+        kategoriTerpilih.value = null
+        dialogOpen.value = true
+    }
 </script>
 
 <template>
@@ -24,11 +35,16 @@
             </div>
 
             <div class="ml-auto">
-                <Button>
-                    <Plus :size="20" /> Tambah Kategori
+                <Button @click="kategoriForm">
+                    <Plus :size="20" />
+                    Tambah Kategori
                 </Button>
             </div>
         </div>
         <Table />
+        <KategoriForm
+            v-model:open="dialogOpen"
+            :kategori="kategoriTerpilih"
+        />
     </div>
 </template>

@@ -10,6 +10,18 @@
         PopoverContent,
         PopoverTrigger,
     } from '@/components/ui/popover'
+
+    import { useRouter } from 'vue-router'
+    
+    const router = useRouter()
+    import {
+        DropdownMenu,
+        DropdownMenuContent,
+        DropdownMenuItem,
+        DropdownMenuLabel,
+        DropdownMenuSeparator,
+        DropdownMenuTrigger,
+    } from '@/components/ui/dropdown-menu'
     import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
     import { CalendarIcon } from '@lucide/vue'
     import { cn } from '@/lib/utils'
@@ -59,8 +71,24 @@
                     </PopoverContent>
                 </Popover>
 
+                <DropdownMenu>
+                    <DropdownMenuTrigger as-child>
+                        <Button variant="outline" class="gap-2">
+                            Status
+                            <ChevronDown :size="16" />
+                        </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Menu Pengembalian</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>Ekspor Data</DropdownMenuItem>
+                        <DropdownMenuItem>Unduh Laporan</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
                 <!-- Tombol Tambah Peminjaman -->
-                <Button class="gap-2">
+                <Button @click="router.push('/admin/pengembalian-form')" class="gap-2">
                     <Plus :size="20" />
                     Tambah Pengembalian
                 </Button>

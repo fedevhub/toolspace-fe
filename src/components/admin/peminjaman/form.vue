@@ -16,6 +16,7 @@
     } from '@/components/ui/select'
     import { Textarea } from '@/components/ui/textarea'
 
+    const tanggalPinjam = ref('')
     const isActive = ref(true)
     const showPassword = ref(false)
     const username = ref('')
@@ -61,20 +62,19 @@
 
 
 <template>
-    <div class="p-8">
-        <Button @click="router.push('/admin/alat')" variant="outline" class="gap-2">
+    <div class="py-20 px-20 pt-8">
+        <Button @click="router.push('/admin/peminjaman')" variant="outline" class="gap-2">
             <ArrowLeft :size="16" />
             Kembali
         </Button>
-        <h1 class="text-3xl font-bold pt-3">{{ isEditMode ? 'Edit Alat' : 'Tambah Alat Baru' }}</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <h1 class="text-3xl font-bold pt-3">{{ isEditMode ? 'Edit Peminjaman' : 'Tambah Peminjaman Baru' }}</h1>
 
         <Card class="shadow-sm mt-3">
             <CardContent>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 gap-x-8 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 gap-x-10 pb-4 p-2">
                     <div>
                         <label for="nama_lengkap" class="text-sm font-medium text-gray-800">
-                        Nama Alat <span class="text-[#DC2626]">*</span>
+                        Nama Peminjam <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Input
@@ -89,24 +89,8 @@
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Kode Alat <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <Input
-                            id="username"
-                            v-model="username"
-                            type="text"
-                            placeholder="Masukkan username"
-                            autocomplete="username"
-                            required
-                            class="h-10"
-                        />
-                    </div>
-
-                    <div>
                         <label for="role" class="text-sm font-medium text-gray-800">
-                            Kategori <span class="text-[#DC2626]">*</span>
+                            Keperluan <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Select v-model="form.role">
@@ -123,24 +107,8 @@
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Jumlah <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <Input
-                            id="username"
-                            v-model="username"
-                            type="text"
-                            placeholder="Masukkan username"
-                            autocomplete="username"
-                            required
-                            class="h-10"
-                        />
-                    </div>
-
-                    <div>
                         <label for="role" class="text-sm font-medium text-gray-800">
-                            Kondisi <span class="text-[#DC2626]">*</span>
+                            Alat <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Select v-model="form.role">
@@ -157,52 +125,37 @@
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Foto Alat <span class="text-[#DC2626]">*</span>
+                        <label for="tanggal_pinjam" class="text-sm font-medium text-gray-800">
+                            Tanggal Pinjam <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Input
-                            id="username"
-                            v-model="username"
-                            type="file"
-                            autocomplete="username"
+                            id="tanggal_pinjam"
+                            v-model="tanggalPinjam"
+                            type="date"
                             required
-                            class="!h-[39.7px]"
+                            class="h-10"
                         />
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Deskripsi 
+                        <label for="tanggal_pinjam" class="text-sm font-medium text-gray-800">
+                            Tanggal Kembali <span class="text-[#DC2626]">*</span>
                         </label>
 
-                        <Textarea placeholder="Masukkan deskripsi." />
-                    </div>
-
-                    <div>
-                        <label
-                            for="status"
-                            class="text-sm font-medium text-gray-800 block mb-2"
-                        >
-                            Status <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <div class="flex items-center gap-3">
-                            <Switch
-                                id="status"
-                                v-model:checked="isActive"
-                            />
-
-                            <span class="text-sm text-gray-700">
-                                {{ isActive ? 'Aktif' : 'Nonaktif' }}
-                            </span>
-                        </div>
-                    </div>                 
+                        <Input
+                            id="tanggal_pinjam"
+                            v-model="tanggalPinjam"
+                            type="date"
+                            required
+                            class="h-10"
+                        />
+                    </div>  
                 </div>
                 
                 <div class="flex justify-end items-center py-3">
                     <Button>
-                        <Save :size="20" /> Tambah Pengguna
+                        <Save :size="20" /> Tambah Peminjaman
                     </Button>
                 </div>
             </CardContent>

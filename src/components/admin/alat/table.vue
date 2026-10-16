@@ -20,7 +20,7 @@ import {
 
 import Button from '@/components/ui/button/Button.vue';
 import { Eye, Pencil, Trash2 } from 'lucide-vue-next'
-import DetailAlat from '@/components/admin/alat/alat-detail.vue'
+import DetailAlat from '@/components/admin/alat/detail.vue'
 import { ref } from 'vue'
 
 const modalTerbuka = ref(false)
@@ -33,7 +33,9 @@ const alat = [
         kategori: 'Elektronik', 
         jumlah: '10', 
         tersedia: '8', 
-        status: 'Tersedia'
+        kondisi: 'Baik',
+        status: 'Tersedia',
+        deskripsi: ''
     },
     { 
         kode_alat: 'KA-002', 
@@ -41,7 +43,9 @@ const alat = [
         kategori: 'Elektronik', 
         jumlah: '5', 
         tersedia: '4', 
-        status: 'Tersedia'
+        kondisi: 'Baik',
+        status: 'Tersedia',
+        deskripsi: ''
     },
     { 
         kode_alat: 'KA-003', 
@@ -49,7 +53,10 @@ const alat = [
         kategori: 'Peralatan', 
         jumlah: '8', 
         tersedia: '8', 
-        status: 'Tersedia'
+        kondisi: 'Baik',
+        status: 'Tersedia',
+        deskripsi: ''
+
     },
     { 
         kode_alat: 'KA-004', 
@@ -57,7 +64,9 @@ const alat = [
         kategori: 'Peralatan Kantor', 
         jumlah: '4', 
         tersedia: '0', 
-        status: 'Habis'
+        kondisi: 'Baik',
+        status: 'Habis',
+        deskripsi: ''
     },
 ]
 

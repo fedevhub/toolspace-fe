@@ -14,6 +14,7 @@
         SelectTrigger,
         SelectValue,
     } from '@/components/ui/select'
+    import { Textarea } from '@/components/ui/textarea'
 
     const isActive = ref(true)
     const showPassword = ref(false)
@@ -54,26 +55,25 @@
             console.log('Kirim data create ke API:', form.value)
         }
 
-        router.push('/views/admin/Pengguna')
+        router.push('/views/admin/Alat')
     }
 </script>
 
 
 <template>
-    <div class="p-8">
-        <Button @click="router.push('/admin/pengguna')" variant="outline" class="gap-2">
+    <div class="py-20 px-20 pt-8">
+        <Button @click="router.push('/admin/alat')" variant="outline" class="gap-2">
             <ArrowLeft :size="16" />
             Kembali
         </Button>
-        <h1 class="text-3xl font-bold pt-3">{{ isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru' }}</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <h1 class="text-3xl font-bold pt-3">{{ isEditMode ? 'Edit Alat' : 'Tambah Alat Baru' }}</h1>
 
         <Card class="shadow-sm mt-3">
             <CardContent>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 gap-x-8 pb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 gap-x-10 pb-4 p-2">
                     <div>
                         <label for="nama_lengkap" class="text-sm font-medium text-gray-800">
-                        Nama Lengkap <span class="text-[#DC2626]">*</span>
+                        Nama Alat <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Input
@@ -89,7 +89,7 @@
 
                     <div>
                         <label for="username" class="text-sm font-medium text-gray-800">
-                            Username <span class="text-[#DC2626]">*</span>
+                            Kode Alat <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Input
@@ -101,55 +101,11 @@
                             required
                             class="h-10"
                         />
-                    </div>
-
-                    <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Email <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <Input
-                            id="username"
-                            v-model="username"
-                            type="text"
-                            placeholder="Masukkan username"
-                            autocomplete="username"
-                            required
-                            class="h-10"
-                        />
-                    </div>
-
-                    <div>
-                        <label for="password" class="text-sm font-medium text-gray-800">
-                            Password <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <div class="relative">
-                            <Input
-                            id="password"
-                            v-model="password"
-                            :type="showPassword ? 'text' : 'password'"
-                            placeholder="Masukkan password"
-                            autocomplete="current-password"
-                            required
-                            class="h-10 pr-10"
-                            />
-
-                            <button
-                            type="button"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
-                            :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
-                            @click="showPassword = !showPassword"
-                            >
-                            <EyeOff v-if="showPassword" class="size-5" />
-                            <Eye v-else class="size-5" />
-                            </button>
-                        </div>
                     </div>
 
                     <div>
                         <label for="role" class="text-sm font-medium text-gray-800">
-                            Role <span class="text-[#DC2626]">*</span>
+                            Kategori <span class="text-[#DC2626]">*</span>
                         </label>
 
                         <Select v-model="form.role">
@@ -163,6 +119,63 @@
                                 <SelectItem value="Peminjam">Peeminjam</SelectItem>
                             </SelectContent>
                         </Select>
+                    </div>
+
+                    <div>
+                        <label for="username" class="text-sm font-medium text-gray-800">
+                            Jumlah <span class="text-[#DC2626]">*</span>
+                        </label>
+
+                        <Input
+                            id="username"
+                            v-model="username"
+                            type="text"
+                            placeholder="Masukkan username"
+                            autocomplete="username"
+                            required
+                            class="h-10"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="role" class="text-sm font-medium text-gray-800">
+                            Kondisi <span class="text-[#DC2626]">*</span>
+                        </label>
+
+                        <Select v-model="form.role">
+                            <SelectTrigger id="role" class="!h-[40px] w-full">
+                                <SelectValue placeholder="Pilih role pengguna" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                                <SelectItem value="Admin">Admin</SelectItem>
+                                <SelectItem value="Petugas">Petugas</SelectItem>
+                                <SelectItem value="Peminjam">Peeminjam</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div>
+                        <label for="username" class="text-sm font-medium text-gray-800">
+                            Foto Alat <span class="text-[#DC2626]">*</span>
+                        </label>
+
+                        <Input
+                            id="username"
+                            v-model="username"
+                            type="file"
+                            autocomplete="username"
+                            required
+                            class="!h-[39.7px]"
+                        />
+                    </div>
+
+                    <div>
+                        <label for="username" class="text-sm font-medium text-gray-800">
+                            Deskripsi 
+                        </label>
+
+                        <Textarea placeholder="Masukkan deskripsi." />
                     </div>
 
                     <div>
@@ -188,7 +201,7 @@
                 
                 <div class="flex justify-end items-center py-3">
                     <Button>
-                        <Save :size="20" /> Tambah Pengguna
+                        <Save :size="20" /> Tambah Alat
                     </Button>
                 </div>
             </CardContent>

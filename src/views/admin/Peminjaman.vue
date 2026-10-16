@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+    import { ref } from 'vue'
     import Table from '@/components/admin/peminjaman/table.vue';
     import { Input } from '@/components/ui/input';
-import { Plus, Search, ChevronDown } from 'lucide-vue-next'
-import Calendar from '@/components/ui/calendar/Calendar.vue'
+    import { Plus, Search, ChevronDown } from 'lucide-vue-next'
+    import Calendar from '@/components/ui/calendar/Calendar.vue'
     import Button from '@/components/ui/button/Button.vue';
-
+    import { useRouter } from 'vue-router'
+    
+    const router = useRouter()
     import {
         DropdownMenu,
         DropdownMenuContent,
@@ -14,16 +16,16 @@ import Calendar from '@/components/ui/calendar/Calendar.vue'
         DropdownMenuSeparator,
         DropdownMenuTrigger,
     } from '@/components/ui/dropdown-menu'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
-import { CalendarIcon } from '@lucide/vue'
-import { cn } from '@/lib/utils'
-const date = ref()
-const defaultPlaceholder = today(getLocalTimeZone())
+    import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+    } from '@/components/ui/popover'
+    import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
+    import { CalendarIcon } from '@lucide/vue'
+    import { cn } from '@/lib/utils'
+    const date = ref()
+    const defaultPlaceholder = today(getLocalTimeZone())
 </script>
 
 <template>
@@ -86,7 +88,7 @@ const defaultPlaceholder = today(getLocalTimeZone())
                 </DropdownMenu>
 
                 <!-- Tombol Tambah Peminjaman -->
-                <Button class="gap-2">
+                <Button @click="router.push('/admin/peminjaman-form')" class="gap-2">
                     <Plus :size="20" />
                     Tambah Peminjaman
                 </Button>
