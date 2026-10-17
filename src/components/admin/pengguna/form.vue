@@ -1,196 +1,167 @@
 <script setup>
-    import { Eye, EyeOff, Save, ArrowLeft } from '@lucide/vue';
-    import { ref, onMounted } from 'vue'
-    import { useRoute, useRouter } from 'vue-router'
-    import { Button } from '@/components/ui/button'
-    import { Input } from '@/components/ui/input'
-    import { Label } from '@/components/ui/label'
-    import { Switch } from '@/components/ui/switch'
-    import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-    import {
-        Select,
-        SelectContent,
-        SelectItem,
-        SelectTrigger,
-        SelectValue,
-    } from '@/components/ui/select'
+import { ref, computed, watch } from 'vue'
+import { Eye, EyeOff, X, Save } from 'lucide-vue-next'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Switch } from '@/components/ui/switch'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import Button from '@/components/ui/button/Button.vue'
 
-    const isActive = ref(true)
-    const showPassword = ref(false)
-    const username = ref('')
-    const password = ref('')
+const props = defineProps({
+    open: Boolean,
+    pengguna: {
+        type: Object,
+        default: null,
+    },
+    loading: Boolean,
+})
 
-    const route = useRoute()
-    const router = useRouter()
-    const userId = route.params.di
-    const isEditMode = !!userId
+const emit = defineEmits(['update:open', 'save'])
 
-    const form = ref({
-        nama_lengkap: '',
-        username: '',
-        email: '',
-        password: '',
-        role: '',
-        status: '',
-    })
+const showPassword = ref(false)
 
-    onMounted(async () => {
-        if (isEditMode) {
-            form.value = {
-                nama_lengkap: 'Budi Santoso',
-                username: 'Budi',
-                email: 'budi@gmail.com',
-                password: 'budi123',
-                role: 'Petugas',
-                status: 'Aktif'
-            }
+const form = ref({
+    nama_lengkap: '',
+    username: '',
+    email: '',
+    password: '',
+    role: '',
+})
+
+const isEditMode = computed(() => !!props.pengguna?.id)
+
+watch(
+    () => [props.open, props.pengguna],
+    () => {
+        if (!props.open) return
+
+        const user = props.pengguna
+
+        form.value = {
+            nama_lengkap: user?.nama_lengkap ?? '',
+            username: user?.username ?? '',
+            email: user?.email ?? '',
+            password: '',
+            role: String(user?.role ?? '').toLowerCase(),
         }
+
+        showPassword.value = false
+    },
+    { immediate: true }
+)
+
+function simpanPengguna() {
+    emit('save', {
+        nama_lengkap: form.value.nama_lengkap,
+        username: form.value.username,
+        email: form.value.email,
+        role: form.value.role,
+        ...(!isEditMode.value || form.value.password
+            ? { password: form.value.password }
+            : {}
+        ),
     })
-
-    const handleSubmit = async () => {
-        if (isEditMode) {
-            console.log('Kirim data update ke API:', form.value)
-        } else {
-            console.log('Kirim data create ke API:', form.value)
-        }
-
-        router.push('/views/admin/Pengguna')
-    }
+}
 </script>
 
-
 <template>
-    <div class="py-20 px-20 pt-8">
-        <Button @click="router.push('/admin/pengguna')" variant="outline" class="gap-2">
-            <ArrowLeft :size="16" />
-            Kembali
-        </Button>
-        <h1 class="text-3xl font-bold pt-3">{{ isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru' }}</h1>
+    <Dialog :open="open" @update:open="emit('update:open', $event)">
+        <DialogContent class="w-[95vw] sm:max-w-[650px] gap-0 overflow-hidden rounded-[24px] border border-gray-300 p-0"
+            :show-close-button="false">
+            <DialogHeader class="flex flex-row items-center justify-between border-b border-gray-300 px-8 py-6">
+                <DialogTitle class="text-2xl font-black">
+                    {{ isEditMode ? 'Edit Pengguna' : 'Tambah Pengguna Baru' }}
+                </DialogTitle>
 
-        <Card class="shadow-sm mt-3">
-            <CardContent>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 gap-x-10 pb-4 p-2">
+                <button type="button" class="text-black hover:text-gray-500" aria-label="Tutup modal"
+                    @click="emit('update:open', false)">
+                    <X :size="24" />
+                </button>
+            </DialogHeader>
+
+            <form @submit.prevent="simpanPengguna">
+                <div class="grid grid-cols-1 gap-5 p-8 sm:grid-cols-2">
                     <div>
-                        <label for="nama_lengkap" class="text-sm font-medium text-gray-800">
-                        Nama Lengkap <span class="text-[#DC2626]">*</span>
+                        <label for="nama_lengkap" class="mb-2 block text-sm font-medium text-gray-800">
+                            Nama Lengkap <span class="text-red-600">*</span>
                         </label>
-
-                        <Input
-                            id="nama_lengkap"
-                            v-model="nama_lengkap"
-                            type="text"
-                            placeholder="Masukkan nama lengkap"
-                            autocomplete="nama_lengkap"
-                            required
-                            class="h-10"
-                        />
+                        <Input id="nama_lengkap" v-model="form.nama_lengkap" placeholder="Masukkan nama lengkap"
+                            required />
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Username <span class="text-[#DC2626]">*</span>
+                        <label for="username" class="mb-2 block text-sm font-medium text-gray-800">
+                            Username <span class="text-red-600">*</span>
                         </label>
-
-                        <Input
-                            id="username"
-                            v-model="username"
-                            type="text"
-                            placeholder="Masukkan username"
-                            autocomplete="username"
-                            required
-                            class="h-10"
-                        />
+                        <Input id="username" v-model="form.username" placeholder="Masukkan username" required />
                     </div>
 
                     <div>
-                        <label for="username" class="text-sm font-medium text-gray-800">
-                            Email <span class="text-[#DC2626]">*</span>
+                        <label for="email" class="mb-2 block text-sm font-medium text-gray-800">
+                            Email <span class="text-red-600">*</span>
                         </label>
-
-                        <Input
-                            id="username"
-                            v-model="username"
-                            type="text"
-                            placeholder="Masukkan username"
-                            autocomplete="username"
-                            required
-                            class="h-10"
-                        />
+                        <Input id="email" v-model="form.email" type="email" placeholder="Masukkan email" required />
                     </div>
 
-                    <div>
-                        <label for="password" class="text-sm font-medium text-gray-800">
-                            Password <span class="text-[#DC2626]">*</span>
+                    <div v-if="!isEditMode">
+                        <label for="password" class="mb-2 block text-sm font-medium text-gray-800">
+                            Password <span class="text-red-600">*</span>
                         </label>
 
                         <div class="relative">
-                            <Input
-                            id="password"
-                            v-model="password"
-                            :type="showPassword ? 'text' : 'password'"
-                            placeholder="Masukkan password"
-                            autocomplete="current-password"
-                            required
-                            class="h-10 pr-10"
-                            />
-
-                            <button
-                            type="button"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
-                            :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
-                            @click="showPassword = !showPassword"
-                            >
-                            <EyeOff v-if="showPassword" class="size-5" />
-                            <Eye v-else class="size-5" />
+                            <Input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
+                                placeholder="Masukkan password" class="pr-10" autocomplete="new-password" required />
+                            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                                :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+                                @click="showPassword = !showPassword">
+                                <EyeOff v-if="showPassword" :size="18" />
+                                <Eye v-else :size="18" />
                             </button>
                         </div>
                     </div>
 
                     <div>
-                        <label for="role" class="text-sm font-medium text-gray-800">
-                            Role <span class="text-[#DC2626]">*</span>
+                        <label for="role" class="mb-2 block text-sm font-medium text-gray-800">
+                            Role <span class="text-red-600">*</span>
                         </label>
-
                         <Select v-model="form.role">
-                            <SelectTrigger id="role" class="!h-[40px] w-full">
+                            <SelectTrigger id="role" class="w-full">
                                 <SelectValue placeholder="Pilih role pengguna" />
                             </SelectTrigger>
-
                             <SelectContent>
-                                <SelectItem value="Admin">Admin</SelectItem>
-                                <SelectItem value="Petugas">Petugas</SelectItem>
-                                <SelectItem value="Peminjam">Peeminjam</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                                <SelectItem value="petugas">Petugas</SelectItem>
+                                <SelectItem value="peminjam">Peminjam</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <div>
-                        <label
-                            for="status"
-                            class="text-sm font-medium text-gray-800 block mb-2"
-                        >
-                            Status <span class="text-[#DC2626]">*</span>
-                        </label>
-
-                        <div class="flex items-center gap-3">
-                            <Switch
-                                id="status"
-                                v-model:checked="isActive"
-                            />
-
-                            <span class="text-sm text-gray-700">
-                                {{ isActive ? 'Aktif' : 'Nonaktif' }}
-                            </span>
-                        </div>
-                    </div>                 
                 </div>
-                
-                <div class="flex justify-end items-center py-3">
-                    <Button>
-                        <Save :size="20" /> Tambah Pengguna
+
+                <DialogFooter class="border-t border-gray-200 px-8 py-4">
+                    <Button type="submit" :disabled="loading">
+                        <Save :size="18" />
+                        {{
+                            loading
+                                ? 'Menyimpan...'
+                                : isEditMode
+                                    ? 'Simpan Perubahan'
+                                    : 'Tambah Pengguna'
+                        }}
                     </Button>
-                </div>
-            </CardContent>
-        </Card>
-    </div>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
 </template>

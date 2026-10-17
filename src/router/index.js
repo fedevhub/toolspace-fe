@@ -115,9 +115,9 @@ const routes = [
         path: '/admin',
         children: [
             {
-                path: 'pengguna-form',
+                path: '/admin/pengguna-form/:id?',
                 name: 'admin-pengguna-form',
-                component: PenggunaForm
+                component: PenggunaForm,
             }
         ]
     },
