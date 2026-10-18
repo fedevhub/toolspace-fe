@@ -85,7 +85,6 @@ async function simpanFormPengguna(data) {
 
     simpanLoading.value = true
 
-    // Simpan jenis operasi sebelum data diproses.
     const modeEdit = Boolean(penggunaDipilih.value)
 
     try {
@@ -150,7 +149,7 @@ onMounted(ambilPengguna)
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Kelola Pengguna</h1>
-
+        <p class="font-medium text-gray-500">Kelola data dan informasi pengguna dalam sistem.</p>
         <div class="flex w-full items-center py-5">
             <div class="relative w-75">
                 <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />

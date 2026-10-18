@@ -85,11 +85,11 @@ const hapusPengguna = (item) => {
                             {{ item.nama_lengkap }}
                         </TableCell>
 
-                        <TableCell class="w-30">
+                        <TableCell class="w-40">
                             {{ item.username }}
                         </TableCell>
 
-                        <TableCell class="w-50">
+                        <TableCell class="w-55">
                             {{ item.email }}
                         </TableCell>
 

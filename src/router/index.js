@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import AdminLayout from '@/layouts/AdminLayout.vue'
+import PetugasLayout from '@/layouts/PetugasLayout.vue'
 import Dashboard from '@/views/admin/Dashboard.vue'
 import Pengguna from '@/views/admin/Pengguna.vue'
 import Alat from '@/views/admin/Alat.vue'
@@ -13,6 +14,8 @@ import AlatForm from '@/components/admin/alat/form.vue'
 import KategoriForm from '@/components/admin/kategori/form.vue'
 import PeminjamanForm from '@/components/admin/peminjaman/form.vue'
 import PengembalianForm from '@/components/admin/pengembalian/form.vue'
+
+import PeminjamanPetugas from '@/views/petugas/Peminjaman.vue'
 import Login from '@/views/auth/Login.vue'
 
 const routes = [
@@ -166,6 +169,20 @@ const routes = [
             }
         ]
     },
+
+    //Petugas
+    {
+        path: '/petugas',
+        component: PetugasLayout,
+        children: [
+            {
+                path: 'peminjaman',
+                name: 'petugas-peminjaman',
+                component: PeminjamanPetugas
+            }
+        ]
+    },
+
 
 
 ]

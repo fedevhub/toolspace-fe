@@ -17,9 +17,7 @@
     import { Textarea } from '@/components/ui/textarea'
 
     const isActive = ref(true)
-    const showPassword = ref(false)
     const username = ref('')
-    const password = ref('')
 
     const route = useRoute()
     const router = useRouter()
