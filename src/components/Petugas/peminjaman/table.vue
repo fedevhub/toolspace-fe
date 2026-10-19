@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue'
 import {
     Table,
     TableBody,
@@ -19,49 +20,54 @@ import {
 } from '@/components/ui/pagination'
 
 import Button from '@/components/ui/button/Button.vue';
-import { Pencil, Trash2 } from 'lucide-vue-next'
+import { Pencil, Trash2 } from 'lucide-vue-next';
+import DetailPeminjaman from '@/components/Petugas/peminjaman/detail.vue';
 
 const peminjaman = [
     {
         id: 'PA-001',
-        peminjaman: 'Andi',
+        peminjam: 'Andi',
         alat: 'Laptop Asus',
-        tanggal: '10-09-2026',
+        tanggal_pinjam: '10-09-2026',
+        tanggal_kembali: '15-09-2026',
         keperluan: 'Praktek',
         status: 'Menunggu'
     },
     {
         id: 'PA-002',
-        peminjaman: 'Budi',
+        peminjam: 'Budi',
         alat: 'Proyektor',
-        tanggal: '11-09-2026',
+        tanggal_pinjam: '11-09-2026',
+        tanggal_kembali: '15-09-2026',
         keperluan: 'Presentasi',
         status: 'Disetujui'
     },
     {
         id: 'PA-003',
-        peminjaman: 'Siti',
+        peminjam: 'Siti',
         alat: 'Stop Kontak',
-        tanggal: '12-09-2026',
+        tanggal_pinjam: '12-09-2026',
+        tanggal_kembali: '15-09-2026',
         keperluan: 'Pembelajaran',
         status: 'Ditolak'
     },
     {
         id: 'PA-004',
-        peminjaman: 'Rina',
+        peminjam: 'Rina',
         alat: 'Printer',
-        tanggal: '13-09-2026',
+        tanggal_pinjam: '13-09-2026',
+        tanggal_kembali: '15-09-2026',
         keperluan: 'Tugas',
         status: 'Dipinjam'
     },
 ]
 
-const editPeminjaman = (item) => {
-    console.log('Edit:', item.nama)
-}
+const modalTerbuka = ref(false)
+const peminjamanTerpilih = ref(null)
 
-const hapusPeminjaman = (item) => {
-    console.log('Hapus:', item.nama)
+const detailPeminjaman = (item) => {
+    peminjamanTerpilih.value = item
+    modalTerbuka.value = true
 }
 </script>
 
@@ -97,9 +103,9 @@ const hapusPeminjaman = (item) => {
                 <TableBody>
                     <TableRow v-for="id in peminjaman" :key="id.id">
                         <TableCell class="px-10 w-30">{{ id.id }}</TableCell>
-                        <TableCell class="w-40">{{ id.peminjaman }}</TableCell>
+                        <TableCell class="w-40">{{ id.peminjam }}</TableCell>
                         <TableCell class="w-33">{{ id.alat }}</TableCell>
-                        <TableCell class="w-33">{{ id.tanggal }}</TableCell>
+                        <TableCell class="w-33">{{ id.tanggal_pinjam }}</TableCell>
                         <TableCell class="w-45">{{ id.keperluan }}</TableCell>
                         <TableCell class="w-20">
                             <span :class="{
@@ -113,7 +119,7 @@ const hapusPeminjaman = (item) => {
                         </TableCell>
                         <TableCell>
                             <div class="flex justify-center items-right gap-2">
-                                <Button class="gap-2">
+                                <Button @click="detailPeminjaman(id)" class="gap-2">
                                     Detail
                                 </Button>
                             </div>
@@ -148,5 +154,8 @@ const hapusPeminjaman = (item) => {
             </Table>
         </div>
     </div>
-
+<DetailPeminjaman
+    v-model:open="modalTerbuka"
+    :peminjaman="peminjamanTerpilih"
+/>
 </template>

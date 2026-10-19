@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import Table from '@/components/Petugas/peminjaman/table.vue'
 import { Input } from '@/components/ui/input';
 import { Plus, Search, ChevronDown } from 'lucide-vue-next'
-import Calendar from '@/components/ui/calendar/Calendar.vue'
 import Button from '@/components/ui/button/Button.vue';
 import { useRouter } from 'vue-router'
 
@@ -16,16 +15,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover'
-import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
-import { CalendarIcon } from '@lucide/vue'
-import { cn } from '@/lib/utils'
-const date = ref()
-const defaultPlaceholder = today(getLocalTimeZone())
 </script>
 
 <template>
@@ -40,22 +29,6 @@ const defaultPlaceholder = today(getLocalTimeZone())
             </div>
 
             <div class="ml-auto flex items-center gap-3">
-                <Popover>
-                    <PopoverTrigger as-child>
-                        <Button variant="outline" :class="cn(
-                            'w-[180px] justify-start text-left font-normal',
-                            !date && 'text-muted-foreground',
-                        )">
-                            <CalendarIcon class="mr-2 h-4 w-4" />
-                            {{ date ? date.toDateString() : "Pick a date" }}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent class="w-auto p-0">
-                        <Calendar v-model="date" :initial-focus="true" :default-placeholder="defaultPlaceholder"
-                            layout="month-and-year" />
-                    </PopoverContent>
-                </Popover>
-
                 <!-- Dropdown Menu -->
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>

@@ -16,6 +16,7 @@ import PeminjamanForm from '@/components/admin/peminjaman/form.vue'
 import PengembalianForm from '@/components/admin/pengembalian/form.vue'
 
 import PeminjamanPetugas from '@/views/petugas/Peminjaman.vue'
+import PengembalianPetugas from '@/views/petugas/Pengembalian.vue'
 import Login from '@/views/auth/Login.vue'
 
 const routes = [
@@ -179,6 +180,18 @@ const routes = [
                 path: 'peminjaman',
                 name: 'petugas-peminjaman',
                 component: PeminjamanPetugas
+            }
+        ]
+    },
+
+    {
+        path: '/petugas',
+        component: PetugasLayout,
+        children: [
+            {
+                path: 'pengembalian',
+                name: 'petugas-pengembalian',
+                component: PengembalianPetugas
             }
         ]
     },
