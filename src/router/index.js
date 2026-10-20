@@ -17,6 +17,7 @@ import PengembalianForm from '@/components/admin/pengembalian/form.vue'
 
 import PeminjamanPetugas from '@/views/petugas/Peminjaman.vue'
 import PengembalianPetugas from '@/views/petugas/Pengembalian.vue'
+import LaporanPetugas from '@/views/petugas/Laporan.vue'
 import Login from '@/views/auth/Login.vue'
 
 const routes = [
@@ -192,6 +193,18 @@ const routes = [
                 path: 'pengembalian',
                 name: 'petugas-pengembalian',
                 component: PengembalianPetugas
+            }
+        ]
+    },
+
+    {
+        path: '/petugas',
+        component: PetugasLayout,
+        children: [
+            {
+                path: 'laporan',
+                name: 'petugas-laporan',
+                component: LaporanPetugas
             }
         ]
     },
