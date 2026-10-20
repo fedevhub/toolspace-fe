@@ -19,7 +19,7 @@
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Kelola Kategori</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <p class="font-medium text-gray-500">Kelola data kategori untuk mengelompokkan alat sesuai jenisnya.</p>
         <div class="flex w-full items-center py-5 ">
             <div class="relative w-75">
                 <Search

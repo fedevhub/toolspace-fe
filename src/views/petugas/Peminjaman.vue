@@ -20,7 +20,7 @@ import {
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Persetujuan Peminjaman</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <p class="font-medium text-gray-500">Kelola dan verifikasi pengajuan peminjaman alat.</p>
         <div class="flex w-full items-center py-5">
             <div class="relative w-75">
                 <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />

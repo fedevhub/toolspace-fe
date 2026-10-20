@@ -31,9 +31,9 @@ const defaultPlaceholder = today(getLocalTimeZone())
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Laporan</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <p class="font-medium text-gray-500">Lihat laporan aktivitas peminjaman dan pengembalian alat.</p>
 
-        <div class="flex w-full items-center py-5">
+        <div class="flex w-full items-center pt-5 pb-2">
             <div class="flex items-end justify-between gap-4 w-full">
                 <!-- Bagian Kiri: Periode & Rentang Kalender -->
                 <div class="flex flex-col gap-2">
@@ -90,7 +90,7 @@ const defaultPlaceholder = today(getLocalTimeZone())
             </div>
         </div>
   
-        <div class="flex w-full items-center">
+        <div class="flex w-full items-center mt-1">
             <div class="relative w-75">
                 <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />
 

@@ -31,7 +31,7 @@
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Kelola Peminjaman</h1>
-        <p class="font-medium text-gray-500">Kelola data hak akses, peran, dan status keaktifan pengguna sistem.</p>
+        <p class="font-medium text-gray-500">Kelola data dan pantau status peminjaman alat.</p>
         <div class="flex w-full items-center py-5">
             <div class="relative w-75">
                 <Search
