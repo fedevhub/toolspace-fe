@@ -7,16 +7,15 @@ import { useRouter } from 'vue-router'
 import api from '@/lib/api'
 
 const router = useRouter()
-
 const showPassword = ref(false)
-const email = ref('')
+const username = ref('')
 const password = ref('')
 const error = ref('')
 const loading = ref(false)
 
 async function handleLogin() {
-  if (!email.value || !password.value) {
-    error.value = 'Email dan password wajib diisi.'
+  if (!username.value.trim() || !password.value) {
+    error.value = 'Username dan password wajib diisi.'
     return
   }
 
@@ -24,26 +23,34 @@ async function handleLogin() {
   loading.value = true
 
   try {
-    const response = await api.post('/login', {
-      email: email.value,
+    const response = await api.post('/auth/login', {
+      username: username.value.trim(),
       password: password.value,
     })
 
-    const token = response.data.token
+    const { token, user } = response.data
+    if (!token || !user) {
+      error.value = 'Respons login tidak lengkap.'
+      return
+    }
 
-    if (!token) {
-      error.value = 'Token tidak ditemukan pada respons login.'
+    const roleRoutes = {
+      admin: '/admin/dashboard',
+      petugas: '/petugas/peminjaman',
+    }
+    const destination = roleRoutes[user.role]
+
+    if (!destination) {
+      error.value = 'Login berhasil, tetapi halaman untuk role ini belum tersedia.'
       return
     }
 
     localStorage.setItem('token', token)
     localStorage.setItem('isLogin', 'true')
-
-    router.push('/admin/dashboard')
+    localStorage.setItem('user', JSON.stringify(user))
+    await router.push(destination)
   } catch (err) {
-    error.value =
-      err.response?.data?.message ||
-      'Login gagal. Periksa email dan password.'
+    error.value = err.response?.data?.message || 'Login gagal. Periksa username dan password.'
   } finally {
     loading.value = false
   }
@@ -52,35 +59,23 @@ async function handleLogin() {
 
 <template>
   <form class="flex flex-col gap-6" @submit.prevent="handleLogin">
-    <!-- Judul -->
-    <div class="mb-4 flex flex-col gap-1 justify-center items-center">
+    <div class="mb-4 flex flex-col items-center justify-center gap-1">
       <h1 class="text-4xl font-bold text-black">LOGIN</h1>
-      <p class="text-base text-gray-500">
-        Login Untuk Masuk Ke Akun Anda
-      </p>
+      <p class="text-base text-gray-500">Login Untuk Masuk Ke Akun Anda</p>
     </div>
 
-    <!-- Username -->
     <div class="flex flex-col gap-2">
-      <label for="email" class="text-sm font-medium text-gray-800">
-        Email
-      </label>
-
-      <Input id="email" v-model="email" type="text" placeholder="Masukkan email" autocomplete="email" required
-        class="h-12" />
+      <label for="username" class="text-sm font-medium text-gray-800">Username</label>
+      <Input id="username" v-model="username" type="text" placeholder="Masukkan username" autocomplete="username"
+        required class="h-12" />
     </div>
 
-    <!-- Password -->
     <div class="flex flex-col gap-2">
-      <label for="password" class="text-sm font-medium text-gray-800">
-        Password
-      </label>
-
+      <label for="password" class="text-sm font-medium text-gray-800">Password</label>
       <div class="relative">
         <Input id="password" v-model="password" :type="showPassword ? 'text' : 'password'"
           placeholder="Masukkan password" autocomplete="current-password" required class="h-12 pr-12" />
-
-        <button type="submit" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
+        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-black"
           :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
           @click="showPassword = !showPassword">
           <EyeOff v-if="showPassword" class="size-5" />
@@ -89,25 +84,15 @@ async function handleLogin() {
       </div>
     </div>
 
-    <p v-if="error" class="text-sm text-red-600">
-      {{ error }}
-    </p>
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
 
-    <div class="flex justify-end text-sm">
-      <Button type="submit" :disabled="loading" class="h-12 w-full bg-black text-base text-white hover:bg-gray-800">
-        {{ loading ? 'Memproses...' : 'Login' }}
-      </Button>
+    <Button type="submit" :disabled="loading" class="h-12 w-full bg-black text-base text-white hover:bg-gray-800">
+      {{ loading ? 'Memproses...' : 'Login' }}
+    </Button>
+
+    <div class="flex items-center justify-center">
+      <span class="text-sm text-black/60">Masalah saat masuk?</span>
+      <a href="#" class="px-1 text-sm underline-offset-4 hover:text-black/80 hover:underline">Hubungi Admin</a>
     </div>
-
-    <div class="flex justify-center items-center">
-      <span class="text-black/60 text-sm">
-        Masalah saat masuk?
-      </span>
-      <a href="#" class="text-sm text-black-600 underline-offset-4 hover:text-black/80 hover:underline px-1">
-        Hubungi Admin
-      </a>
-    </div>
-
-
   </form>
 </template>

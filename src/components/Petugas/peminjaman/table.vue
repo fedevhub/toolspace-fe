@@ -58,7 +58,7 @@ const peminjaman = [
         tanggal_pinjam: '13-09-2026',
         tanggal_kembali: '15-09-2026',
         keperluan: 'Tugas',
-        status: 'Dipinjam'
+        status: 'Disetujui'
     },
 ]
 
@@ -112,7 +112,6 @@ const detailPeminjaman = (item) => {
                                 'text-[#BA3800]': id.status === 'Menunggu',
                                 'text-[#03543F]': id.status === 'Disetujui',
                                 'text-[#9B1C1C]': id.status === 'Ditolak',
-                                'text-[#1E429F]': id.status === 'Dipinjam',
                             }">
                                 {{ id.status }}
                             </span>
