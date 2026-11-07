@@ -37,6 +37,7 @@ async function handleLogin() {
     const roleRoutes = {
       admin: '/admin/dashboard',
       petugas: '/petugas/peminjaman',
+      peminjam: '/peminjam/dashboard',
     }
     const destination = roleRoutes[user.role]
 

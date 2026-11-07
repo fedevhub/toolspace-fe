@@ -1,16 +1,23 @@
 <script setup>
-import { computed, watch, ref } from 'vue'
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
+    DialogDescription,
     DialogFooter,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import Button from '@/components/ui/button/Button.vue'
 import { X, Save } from 'lucide-vue-next'
+
+import { computed, ref, watch } from 'vue';
+import {
+    editKategori,
+    reserveKodeKategori,
+    tambahKategori,
+} from '@/services/kategoriService'
 
 const props = defineProps({
     open: Boolean,
@@ -20,30 +27,101 @@ const props = defineProps({
     },
 })
 
-const emit = defineEmits(['update:open', 'save'])
+const emit = defineEmits(['update:open', 'saved'])
 
-const nama_alat = ref('')
-const deskripsi = ref('')
+const kategoriId = computed(() => props.kategori?.id)
+const isEditMode = computed(() => Boolean(kategoriId.value))
+const loading = ref(false)
+const errorMessage = ref('')
+const form = ref({
+    kode_kategori: '',
+    reservation_token: '',
+    nama_kategori: '',
+    deskripsi: '',
+});
 
-const isEditMode = computed(() => !!props.alat)
+async function ambilKodeBerikutnya() {
+    const response = await reserveKodeKategori()
+    form.value.kode_kategori = response.data.kode_kategori
+    form.value.reservation_token = response.data.token
+}
+
+async function siapkanForm() {
+    errorMessage.value = ''
+    loading.value = true
+    try {
+        if (isEditMode.value) {
+            form.value = {
+                kode_kategori: props.kategori.kode_kategori ?? '',
+                reservation_token: '',
+                nama_kategori: props.kategori.nama_kategori ?? '',
+                deskripsi: props.kategori.deskripsi ?? '',
+            }
+        } else {
+            form.value = {
+                kode_kategori: '',
+                reservation_token: '',
+                nama_kategori: '',
+                deskripsi: '',
+            }
+            await ambilKodeBerikutnya()
+        }
+    } catch (error) {
+        console.error('Gagal memuat form kategori:', error)
+        errorMessage.value = error.response?.data?.message ?? 'Gagal memuat data kategori.'
+    } finally {
+        loading.value = false
+    }
+}
 
 watch(
-    () => props.alat,
-    (alat) => {
-        nama_alat.value = alat?.nama_alat ?? ''
-        deskripsi.value = alat?.deskripsi ?? ''
+    () => [props.open, props.kategori],
+    ([open]) => {
+        if (open) siapkanForm()
     },
-    { immediate: true }
+    { immediate: true },
 )
 
-function simpanAlat() {
-    emit('save', {
-        nama_alat: nama_alat.value,
-        deskripsi: deskripsi.value,
-    })
+async function handleSubmit() {
+    errorMessage.value = ''
+    if (!form.value.nama_kategori.trim()) {
+        errorMessage.value = 'Nama kategori wajib diisi.'
+        return
+    }
 
-    emit('update:open', false)
+    if (!isEditMode.value && (!form.value.kode_kategori || !form.value.reservation_token)) {
+        errorMessage.value = 'ID kategori belum berhasil dicadangkan. Muat ulang halaman untuk mencoba lagi.'
+        return
+    }
+
+    loading.value = true
+    const data = {
+        nama_kategori: form.value.nama_kategori.trim(),
+        deskripsi: form.value.deskripsi.trim(),
+        ...(!isEditMode.value
+            ? {
+                kode_kategori: form.value.kode_kategori,
+                reservation_token: form.value.reservation_token,
+            }
+            : {}),
+    }
+
+    try {
+        if (isEditMode.value) {
+            await editKategori(kategoriId.value, data)
+        } else {
+            await tambahKategori(data)
+        }
+        emit('update:open', false)
+        emit('saved')
+    } catch (error) {
+        console.error('Gagal menyimpan kategori:', error)
+        errorMessage.value = error.response?.data?.message ?? 'Gagal menyimpan kategori.'
+    } finally {
+        loading.value = false
+    }
 }
+
 </script>
 
 <template>
@@ -59,8 +137,11 @@ function simpanAlat() {
                 class="flex flex-row items-center justify-between border-b border-gray-300 px-8 py-6"
             >
                 <DialogTitle class="text-2xl font-black">
-                    {{ isEditMode ? 'Edit Alat' : 'Tambah Alat Baru' }}
+                    {{ isEditMode ? 'Edit Kategori' : 'Tambah Kategori Baru' }}
                 </DialogTitle>
+                <DialogDescription class="sr-only">
+                    {{ isEditMode ? 'Perbarui informasi kategori.' : 'Isi nama dan deskripsi untuk menambahkan kategori baru.' }}
+                </DialogDescription>
 
                 <button
                     type="button"
@@ -71,20 +152,21 @@ function simpanAlat() {
                 </button>
             </DialogHeader>
 
-            <form @submit.prevent="simpanAlat">
-                <div class="space-y-5 p-8">
+            <form @submit.prevent="handleSubmit">
+                <div v-if="loading" class="py-4 text-gray-500">Memuat data kategori...</div>
+                <div v-else class="space-y-5 p-8">
                     <div>
                         <label
-                            for="nama_alat"
+                            for="nama_kategori"
                             class="mb-2 block text-sm font-medium text-gray-800"
                         >
-                            Nama Alat <span class="text-red-600">*</span>
+                            Nama Kategori <span class="text-red-600">*</span>
                         </label>
 
                         <Input
-                            id="nama_alat"
-                            v-model="nama_alat"
-                            placeholder="Masukkan nama alat"
+                            id="nama_kategori"
+                            v-model="form.nama_kategori"
+                            placeholder="Masukkan nama kategori"
                             required
                         />
                     </div>
@@ -99,16 +181,20 @@ function simpanAlat() {
 
                         <Textarea
                             id="deskripsi"
-                            v-model="deskripsi"
-                            placeholder="Masukkan deskripsi alat"
+                            v-model="form.deskripsi"
+                            placeholder="Masukkan deskripsi kategori"
                         />
                     </div>
                 </div>
 
+                <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">
+                    {{ errorMessage }}
+                </p>
+
                 <DialogFooter class="border-t border-gray-200 px-8 py-4">
-                    <Button type="submit">
+                    <Button type="submit" :disabled="loading || (!isEditMode && !form.reservation_token)">
                         <Save :size="18" />
-                        {{ isEditMode ? 'Simpan Perubahan' : 'Tambah Alat' }}
+                        {{ loading ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Tambah Kategori' }}
                     </Button>
                 </DialogFooter>
             </form>

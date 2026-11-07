@@ -25,6 +25,10 @@ defineProps({
         type: Array,
         default: () => [],
     },
+    loading: {
+        type: Boolean,
+        default: false,
+    },
 })
 
 const emit = defineEmits(['edit', 'delete'])
@@ -78,14 +82,14 @@ const hapusPengguna = (item) => {
                         :key="item.id"
                     >
                         <TableCell class="px-10 w-0">
-                            {{ item.id }}
+                            {{ item.id_pengguna ?? item.id }}
                         </TableCell>
 
                         <TableCell class="w-45">
                             {{ item.nama_lengkap }}
                         </TableCell>
 
-                        <TableCell class="w-40">
+                        <TableCell class="w-30">
                             {{ item.username }}
                         </TableCell>
 
@@ -135,7 +139,13 @@ const hapusPengguna = (item) => {
                         </TableCell>
                     </TableRow>
 
-                    <TableRow v-if="pengguna.length === 0">
+                    <TableRow v-if="loading && pengguna.length === 0">
+                        <TableCell colspan="6" class="py-6 text-center text-gray-500">
+                            Memuat data pengguna...
+                        </TableCell>
+                    </TableRow>
+
+                    <TableRow v-else-if="pengguna.length === 0">
                         <TableCell
                             colspan="6"
                             class="py-6 text-center text-gray-500"

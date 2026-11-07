@@ -1,19 +1,69 @@
 <script setup>
-    import Table from '@/components/admin/kategori/table.vue';
-    import { Input } from '@/components/ui/input';
-    import { Plus, Search } from 'lucide-vue-next';
-    import Button from '@/components/ui/button/Button.vue';
-    import { useRouter } from 'vue-router'
-    import KategoriForm from '@/components/admin/kategori/form.vue'
-    import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import Table from '@/components/admin/kategori/table.vue'
+import { Input } from '@/components/ui/input'
+import { Plus, Search } from 'lucide-vue-next'
+import Button from '@/components/ui/button/Button.vue'
+import KategoriForm from '@/components/admin/kategori/form.vue'
+import { getKategori, hapusKategori } from '@/services/kategoriService'
 
-    const kategoriTerpilih = ref(null)
-    const dialogOpen = ref(false)
+const daftarKategori = ref([])
+const loading = ref(true)
+const errorMessage = ref('')
+const pencarian = ref('')
+const kategoriTerpilih = ref(null)
+const dialogOpen = ref(false)
 
-    function kategoriForm() {
-        kategoriTerpilih.value = null
-        dialogOpen.value = true
+const kategoriDitampilkan = computed(() => {
+    const query = pencarian.value.trim().toLowerCase()
+    if (!query) return daftarKategori.value
+
+    return daftarKategori.value.filter((kategori) =>
+        [kategori.kode_kategori, kategori.nama_kategori, kategori.deskripsi]
+            .some((value) => value?.toLowerCase().includes(query)),
+    )
+})
+
+async function ambilKategori() {
+    loading.value = true
+    errorMessage.value = ''
+    try {
+        const response = await getKategori()
+        if (!Array.isArray(response.data)) {
+            throw new TypeError('Respons API kategori tidak berisi daftar kategori.')
+        }
+        daftarKategori.value = response.data
+    } catch (error) {
+        console.error('Gagal mengambil data kategori:', error)
+        errorMessage.value = error.response?.data?.message ?? 'Gagal mengambil data kategori.'
+    } finally {
+        loading.value = false
     }
+}
+
+function tambahKategori() {
+    kategoriTerpilih.value = null
+    dialogOpen.value = true
+}
+
+function editKategori(kategori) {
+    kategoriTerpilih.value = kategori
+    dialogOpen.value = true
+}
+
+async function hapusItemKategori(kategori) {
+    if (!confirm(`Yakin ingin menghapus ${kategori.nama_kategori} (${kategori.kode_kategori})?`)) return
+
+    try {
+        await hapusKategori(kategori.id)
+        daftarKategori.value = daftarKategori.value.filter((item) => item.id !== kategori.id)
+    } catch (error) {
+        console.error('Gagal menghapus kategori:', error)
+        alert(error.response?.data?.message ?? 'Gagal menghapus kategori.')
+    }
+}
+
+onMounted(ambilKategori)
 </script>
 
 <template>
@@ -28,23 +78,34 @@
                 />
 
                 <Input
+                    v-model="pencarian"
                     type="text"
-                    placeholder="Cari"
+                    placeholder="Cari kategori"
                     class="bg-white pl-10"
                 />
             </div>
 
             <div class="ml-auto">
-                <Button @click="kategoriForm">
+                <Button @click="tambahKategori">
                     <Plus :size="20" />
                     Tambah Kategori
                 </Button>
             </div>
         </div>
-        <Table />
+        <p v-if="errorMessage" role="alert" class="mb-4 text-sm text-red-600">
+            {{ errorMessage }}
+        </p>
+
+        <Table
+            :kategori="kategoriDitampilkan"
+            :loading="loading"
+            @edit="editKategori"
+            @delete="hapusItemKategori"
+        />
         <KategoriForm
             v-model:open="dialogOpen"
             :kategori="kategoriTerpilih"
+            @saved="ambilKategori"
         />
     </div>
 </template>

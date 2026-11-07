@@ -19,6 +19,7 @@ import PeminjamanPetugas from '@/views/petugas/Peminjaman.vue'
 import PengembalianPetugas from '@/views/petugas/Pengembalian.vue'
 import LaporanPetugas from '@/views/petugas/Laporan.vue'
 import Login from '@/views/auth/Login.vue'
+import DashboardPeminjam from '@/views/peminjam/Dashboard.vue'
 
 const routes = [
     {
@@ -30,6 +31,17 @@ const routes = [
                 component: Login
             }
         ]
+    },
+
+    {
+        path: '/peminjam',
+        children: [
+            {
+                path: 'dashboard',
+                name: 'peminjam-dashboard',
+                component: DashboardPeminjam,
+            },
+        ],
     },
 
     {
@@ -131,7 +143,7 @@ const routes = [
         path: '/admin',
         children: [
             {
-                path: 'alat-form',
+                path: 'alat-form/:id?',
                 name: 'admin-alat-form',
                 component: AlatForm
             }

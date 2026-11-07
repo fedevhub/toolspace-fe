@@ -8,7 +8,8 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
     Pagination,
     PaginationContent,
@@ -19,38 +20,24 @@ import {
 } from '@/components/ui/pagination'
 
 import Button from '@/components/ui/button/Button.vue';
-import { Eye, Pencil, Trash2 } from 'lucide-vue-next'
+import { Eye, Pencil, Trash2 } from 'lucide-vue-next';
 
-const kategori = [
-    { 
-        id: 'K-001', 
-        nama_kategori: 'Elektronik', 
-        deskripsi: 'Alat yang menggunakan listrik untuk berbagai kegiatan.', 
+defineProps({
+    kategori: {
+        type: Array,
+        default: () => [],
     },
-        { 
-        id: 'K-003', 
-        nama_kategori: 'Peralatan Kantor', 
-        deskripsi: 'Alat untuk membantu pekerjaan dan administrasi kantor.', 
+    loading: {
+        type: Boolean,
+        default: false,
     },
-        { 
-        id: 'K-003', 
-        nama_kategori: 'Peralatan Presentasi', 
-        deskripsi: 'Alat untuk mendukung presentasi dan penyampaian materi.', 
-    },
-    { 
-        id: 'K-004', 
-        nama_kategori: 'Peralatan Pendukung', 
-        deskripsi: 'Alat untuk membantu kebutuhan operasional sehari-hari.', 
-    },
-]
+})
 
-const editKategori = (item) => {
-    console.log('Edit:', item.nama)
-}
+const emit = defineEmits(['edit', 'delete'])
+const modalTerbuka = ref(false)
+const kategoriTerpilih = ref(null)
+const memuatDetail = ref(false)
 
-const hapusKategori = (item) => {
-    console.log('Hapus:', item.nama)
-}
 </script>
 
 <template>
@@ -74,16 +61,16 @@ const hapusKategori = (item) => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="id in kategori" :key="id.id">
-                        <TableCell class="px-10 w-30">{{ id.id }}</TableCell>
-                        <TableCell class="w-55">{{ id.nama_kategori }}</TableCell>
-                        <TableCell class="w-115">{{ id.deskripsi }}</TableCell>
+                    <TableRow v-for="item in kategori" :key="item.id">
+                        <TableCell class="px-10 w-30">{{ item.kode_kategori }}</TableCell>
+                        <TableCell class="w-55">{{ item.nama_kategori }}</TableCell>
+                        <TableCell class="w-115">{{ item.deskripsi }}</TableCell>
                         <TableCell>
                             <div class="flex justify-center items-right gap-2">
                                 <Button
                                     size="icon"
                                     class="bg-[#E1EFFE] rounded-full hover:bg-[#d2e7fd]"
-                                    @click="editKategori(item)"
+                                    @click="emit('edit', item)"
                                 >
                                     <Pencil class="h-4 w-4 text-[#0284C7]" />
                                 </Button>
@@ -91,11 +78,21 @@ const hapusKategori = (item) => {
                                 <Button
                                     size="icon"
                                     class="bg-[#FEE2E2] rounded-full hover:bg-[#fdd5d5]"
-                                    @click="hapusKategori(item)"
+                                    @click="emit('delete', item)"
                                 >
                                     <Trash2 class="h-4 w-4 text-[#DC2626]" />
                                 </Button>
                             </div>
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-if="loading && kategori.length === 0">
+                        <TableCell colspan="7" class="py-6 text-center text-gray-500">
+                            Memuat data kategori...
+                        </TableCell>
+                    </TableRow>
+                    <TableRow v-else-if="kategori.length === 0">
+                        <TableCell colspan="7" class="py-6 text-center text-gray-500">
+                            Belum ada data kategori.
                         </TableCell>
                     </TableRow>
                 </TableBody>

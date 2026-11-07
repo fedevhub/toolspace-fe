@@ -4,6 +4,9 @@ const express = require('express')
 const cors = require('cors')
 const connectDB = require('./config/connectDb')
 const authRoutes = require('./routes/authRoutes')
+const userRoutes = require('./routes/userRoutes')
+const alatRoutes = require('./routes/alatRoutes')
+const kategoriRoutes = require('./routes/kategoriRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -11,7 +14,7 @@ const PORT = process.env.PORT || 3000
 app.use(cors({
     origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
 }))
-app.use(express.json())
+app.use(express.json({ limit: '7mb' }))
 app.use(express.urlencoded({ extended: true }))
 
 app.get('/api/health', (req, res) => {
@@ -19,6 +22,15 @@ app.get('/api/health', (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/users', userRoutes)
+app.use('/api/alat', alatRoutes)
+app.use('/api/kategori', kategoriRoutes)
+app.use((error, _req, res, next) => {
+    if (error.type === 'entity.too.large') {
+        return res.status(413).json({ message: 'Ukuran permintaan terlalu besar. Foto maksimal 5 MB.' })
+    }
+    return next(error)
+})
 
 async function startServer() {
     if (!process.env.MONGO_URI) {

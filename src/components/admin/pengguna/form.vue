@@ -114,14 +114,16 @@ function simpanPengguna() {
                         <Input id="email" v-model="form.email" type="email" placeholder="Masukkan email" required />
                     </div>
 
-                    <div v-if="!isEditMode">
+                    <div>
                         <label for="password" class="mb-2 block text-sm font-medium text-gray-800">
-                            Password <span class="text-red-600">*</span>
+                            Password
+                            <span v-if="!isEditMode" class="text-red-600">*</span>
                         </label>
 
                         <div class="relative">
                             <Input id="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
-                                placeholder="Masukkan password" class="pr-10" autocomplete="new-password" required />
+                                :placeholder="isEditMode ? 'Kosongkan jika tidak diubah' : 'Masukkan password'"
+                                class="pr-10" autocomplete="new-password" :required="!isEditMode" />
                             <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
                                 :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
                                 @click="showPassword = !showPassword">

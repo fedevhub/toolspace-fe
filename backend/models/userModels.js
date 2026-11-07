@@ -2,6 +2,13 @@ const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema(
     {
+        id_pengguna: {
+            type: String,
+            unique: true,
+            sparse: true,
+            immutable: true,
+            trim: true,
+        },
         nama_lengkap: {
             type: String,
             required: true,

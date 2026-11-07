@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import Table from '@/components/admin/pengguna/table.vue'
 import PenggunaForm from '@/components/admin/pengguna/form.vue'
 import { Input } from '@/components/ui/input'
@@ -37,6 +37,17 @@ function bacaCachePengguna() {
 const daftarPengguna = ref(bacaCachePengguna())
 const loading = ref(daftarPengguna.value.length === 0)
 const errorMessage = ref('')
+const pencarian = ref('')
+const penggunaDitampilkan = computed(() => {
+    const query = pencarian.value.trim().toLowerCase()
+    if (!query) return daftarPengguna.value
+
+    return daftarPengguna.value.filter((pengguna) =>
+        [pengguna.nama_lengkap, pengguna.username, pengguna.email, pengguna.role]
+            .concat(pengguna.id_pengguna ?? [])
+            .some((value) => value?.toLowerCase().includes(query)),
+    )
+})
 
 const formTerbuka = ref(false)
 const penggunaDipilih = ref(null)
@@ -154,7 +165,7 @@ onMounted(ambilPengguna)
             <div class="relative w-75">
                 <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />
 
-                <Input type="text" placeholder="Cari" class="bg-white pl-10" />
+                <Input v-model="pencarian" type="search" placeholder="Cari pengguna" class="bg-white pl-10" />
             </div>
 
             <div class="ml-auto">
@@ -169,7 +180,7 @@ onMounted(ambilPengguna)
             {{ errorMessage }}
         </p>
 
-        <Table :pengguna="daftarPengguna" :loading="loading" @edit="editPengguna" @delete="hapusPengguna" />
+        <Table :pengguna="penggunaDitampilkan" :loading="loading" @edit="editPengguna" @delete="hapusPengguna" />
 
         <PenggunaForm v-model:open="formTerbuka" :pengguna="penggunaDipilih" :loading="simpanLoading"
             @save="simpanFormPengguna" />
