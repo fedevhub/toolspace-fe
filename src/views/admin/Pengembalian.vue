@@ -1,99 +1,23 @@
 <script setup>
-    import { ref } from 'vue'
-    import Table from '@/components/admin/pengembalian/table.vue';
-    import { Input } from '@/components/ui/input';
-    import { Plus, Search, ChevronDown } from 'lucide-vue-next'
-    import Calendar from '@/components/ui/calendar/Calendar.vue'
-    import Button from '@/components/ui/button/Button.vue';
-    import {
-        Popover,
-        PopoverContent,
-        PopoverTrigger,
-    } from '@/components/ui/popover'
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import Table from '@/components/admin/pengembalian/table.vue'
+import { Input } from '@/components/ui/input'
+import Button from '@/components/ui/button/Button.vue'
+import { Plus, Search } from 'lucide-vue-next'
+import { getPengembalian, hapusPengembalian } from '@/services/pengembalianService'
 
-    import { useRouter } from 'vue-router'
-    
-    const router = useRouter()
-    import {
-        DropdownMenu,
-        DropdownMenuContent,
-        DropdownMenuItem,
-        DropdownMenuLabel,
-        DropdownMenuSeparator,
-        DropdownMenuTrigger,
-    } from '@/components/ui/dropdown-menu'
-    import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
-    import { CalendarIcon } from '@lucide/vue'
-    import { cn } from '@/lib/utils'
-    const date = ref()
-    const defaultPlaceholder = today(getLocalTimeZone())
+const router = useRouter()
+const data = ref([]), loading = ref(false), error = ref(''), query = ref('')
+const filtered = computed(() => { const q = query.value.trim().toLowerCase(); return q ? data.value.filter((item) => [item.kode_pengembalian, item.nama_peminjam, item.alat, item.status].some((value) => value.toLowerCase().includes(q))) : data.value })
+async function load() { loading.value = true; error.value = ''; try { data.value = (await getPengembalian()).data } catch (e) { error.value = e.response?.data?.message || 'Gagal mengambil data pengembalian.' } finally { loading.value = false } }
+async function remove(item) { if (!window.confirm(`Hapus pengembalian ${item.kode_pengembalian}?`)) return; try { await hapusPengembalian(item.id); await load() } catch (e) { error.value = e.response?.data?.message || 'Gagal menghapus pengembalian.' } }
+onMounted(load)
 </script>
 
 <template>
-    <div class="p-8">
-        <h1 class="text-3xl font-bold">Kelola Pengembalian</h1>
-        <p class="font-medium text-gray-500">Kelola data dan pantau status pengembalian alat.</p>
-        <div class="flex w-full items-center py-5">
-            <div class="relative w-75">
-                <Search
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                    :size="18"
-                />
-
-                <Input
-                    type="text"
-                    placeholder="Cari"
-                    class="bg-white pl-10"
-                />
-            </div>
-
-            <div class="ml-auto flex items-center gap-3">
-                <Popover>
-                    <PopoverTrigger as-child>
-                    <Button
-                        variant="outline"
-                        :class="cn(
-                        'w-[180px] justify-start text-left font-normal',
-                        !date && 'text-muted-foreground',
-                        )"
-                    >
-                        <CalendarIcon class="mr-2 h-4 w-4" />
-                        {{ date ? date.toDateString() : "Pick a date" }}
-                    </Button>
-                    </PopoverTrigger>
-                    <PopoverContent class="w-auto p-0">
-                    <Calendar
-                        v-model="date"
-                        :initial-focus="true"
-                        :default-placeholder="defaultPlaceholder"
-                        layout="month-and-year"
-                    />
-                    </PopoverContent>
-                </Popover>
-
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button variant="outline" class="gap-2">
-                            Status
-                            <ChevronDown :size="16" />
-                        </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Menu Pengembalian</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ekspor Data</DropdownMenuItem>
-                        <DropdownMenuItem>Unduh Laporan</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-                <!-- Tombol Tambah Peminjaman -->
-                <Button @click="router.push('/admin/pengembalian-form')" class="gap-2">
-                    <Plus :size="20" />
-                    Tambah Pengembalian
-                </Button>
-            </div>
-        </div>
-        <Table />
-    </div>
+  <div class="p-8"><h1 class="text-3xl font-bold">Kelola Pengembalian</h1><p class="font-medium text-gray-500">Kelola data dan pantau status pengembalian alat.</p>
+    <div class="flex w-full items-center py-5"><div class="relative w-75"><Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" /><Input v-model="query" placeholder="Cari pengembalian" class="bg-white pl-10" /></div><Button class="ml-auto gap-2" @click="router.push('/admin/pengembalian-form')"><Plus :size="20" />Tambah Pengembalian</Button></div>
+    <p v-if="error" class="mb-3 text-sm text-red-600">{{ error }}</p><Table :pengembalian="filtered" :loading="loading" @delete="remove" />
+  </div>
 </template>

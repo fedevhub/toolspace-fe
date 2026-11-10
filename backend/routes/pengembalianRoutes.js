@@ -1,0 +1,10 @@
+const express = require('express')
+const authMiddleware = require('../middleware/authMiddleware')
+const controller = require('../controllers/pengembalianController')
+const router = express.Router()
+router.use(authMiddleware)
+router.use((req, res, next) => req.user.role === 'admin' ? next() : res.status(403).json({ message: 'Hanya admin yang dapat mengelola pengembalian.' }))
+router.get('/', controller.list)
+router.post('/', controller.create)
+router.delete('/:id', controller.remove)
+module.exports = router

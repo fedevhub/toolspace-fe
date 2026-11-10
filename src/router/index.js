@@ -41,6 +41,11 @@ const routes = [
                 name: 'peminjam-dashboard',
                 component: DashboardPeminjam,
             },
+            {
+                path: 'peminjaman-form',
+                name: 'peminjam-peminjaman-form',
+                component: PeminjamanForm,
+            },
         ],
     },
 
@@ -166,7 +171,7 @@ const routes = [
         path: '/admin',
         children: [
             {
-                path: 'peminjaman-form',
+                path: 'peminjaman-form/:id?',
                 name: 'admin-peminjaman-form',
                 component: PeminjamanForm
             }

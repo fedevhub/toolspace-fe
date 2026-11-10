@@ -1,53 +1,54 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import Table from '@/components/Petugas/peminjaman/table.vue'
-import { Input } from '@/components/ui/input';
-import { Plus, Search, ChevronDown } from 'lucide-vue-next'
-import Button from '@/components/ui/button/Button.vue';
-import { useRouter } from 'vue-router'
+import { getPeminjaman, ubahStatusPeminjaman } from '@/services/peminjamanService'
 
-const router = useRouter()
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+const daftarPeminjaman = ref([])
+const loading = ref(true)
+const errorMessage = ref('')
+
+async function ambilPeminjaman() {
+    loading.value = true
+    errorMessage.value = ''
+    try {
+        const response = await getPeminjaman()
+        if (!Array.isArray(response.data)) {
+            throw new TypeError('Respons API peminjaman tidak berisi daftar peminjaman.')
+        }
+        daftarPeminjaman.value = response.data
+    } catch (error) {
+        console.error('Gagal mengambil data peminjaman:', error)
+        errorMessage.value = error.response?.data?.message ?? 'Gagal mengambil data peminjaman.'
+    } finally {
+        loading.value = false
+    }
+}
+
+async function ubahStatus({ id, status }) {
+    errorMessage.value = ''
+    try {
+        await ubahStatusPeminjaman(id, status)
+        await ambilPeminjaman()
+    } catch (error) {
+        console.error('Gagal mengubah status peminjaman:', error)
+        errorMessage.value = error.response?.data?.message ?? 'Gagal mengubah status peminjaman.'
+    }
+}
+
+onMounted(ambilPeminjaman)
 </script>
 
 <template>
     <div class="p-8">
         <h1 class="text-3xl font-bold">Persetujuan Peminjaman</h1>
         <p class="font-medium text-gray-500">Kelola dan verifikasi pengajuan peminjaman alat.</p>
-        <div class="flex w-full items-center py-5">
-            <div class="relative w-75">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />
-
-                <Input type="text" placeholder="Cari" class="bg-white pl-10" />
-            </div>
-
-            <div class="ml-auto flex items-center gap-3">
-                <!-- Dropdown Menu -->
-                <DropdownMenu>
-                    <DropdownMenuTrigger as-child>
-                        <Button variant="outline" class="gap-2">
-                            Status
-                            <ChevronDown :size="16" />
-                        </Button>
-                    </DropdownMenuTrigger>
-
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Menu Peminjaman</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>Ekspor Data</DropdownMenuItem>
-                        <DropdownMenuItem>Unduh Laporan</DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-
-            </div>
-        </div>
-        <Table />
+        <p v-if="errorMessage" role="alert" class="my-4 text-sm text-red-600">
+            {{ errorMessage }}
+        </p>
+        <Table
+            :peminjaman="daftarPeminjaman"
+            :loading="loading"
+            @status-change="ubahStatus"
+        />
     </div>
 </template>

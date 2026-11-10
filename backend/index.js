@@ -7,6 +7,9 @@ const authRoutes = require('./routes/authRoutes')
 const userRoutes = require('./routes/userRoutes')
 const alatRoutes = require('./routes/alatRoutes')
 const kategoriRoutes = require('./routes/kategoriRoutes')
+const peminjamanRoutes = require('./routes/peminjamanRoutes')
+const pengembalianRoutes = require('./routes/pengembalianRoutes')
+const dashboardRoutes = require('./routes/dashboardRoutes')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -25,6 +28,9 @@ app.use('/api/auth', authRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/alat', alatRoutes)
 app.use('/api/kategori', kategoriRoutes)
+app.use('/api/peminjaman', peminjamanRoutes)
+app.use('/api/pengembalian', pengembalianRoutes)
+app.use('/api/dashboard', dashboardRoutes)
 app.use((error, _req, res, next) => {
     if (error.type === 'entity.too.large') {
         return res.status(413).json({ message: 'Ukuran permintaan terlalu besar. Foto maksimal 5 MB.' })

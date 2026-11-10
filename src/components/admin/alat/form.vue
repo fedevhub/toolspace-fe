@@ -19,20 +19,14 @@ import {
     reserveKodeAlat,
     tambahAlat,
 } from '@/services/alatService'
-
-const kategoriAlat = [
-    'Elektronik',
-    'Peralatan',
-    'Peralatan Kantor',
-    'Peralatan Presentasi',
-    'Peralatan Pendukung',
-]
+import { getKategori } from '@/services/kategoriService'
 const route = useRoute()
 const router = useRouter()
 const alatId = computed(() => route.params.id)
 const isEditMode = computed(() => Boolean(alatId.value))
 const loading = ref(false)
 const errorMessage = ref('')
+const daftarKategori = ref([])
 const form = ref({
     kode_alat: '',
     reservation_token: '',
@@ -54,6 +48,12 @@ async function ambilKodeBerikutnya() {
 onMounted(async () => {
     loading.value = true
     try {
+        const kategoriResponse = await getKategori()
+        if (!Array.isArray(kategoriResponse.data)) {
+            throw new TypeError('Respons API kategori tidak berisi daftar kategori.')
+        }
+        daftarKategori.value = kategoriResponse.data
+
         if (isEditMode.value) {
             const response = await detailAlat(alatId.value)
             form.value = { ...form.value, ...response.data }
@@ -197,8 +197,12 @@ async function handleSubmit() {
                             <SelectValue placeholder="Pilih Kategori" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem v-for="kategori in kategoriAlat" :key="kategori" :value="kategori">
-                                {{ kategori }}
+                            <SelectItem
+                                v-for="kategori in daftarKategori"
+                                :key="kategori.id"
+                                :value="kategori.nama_kategori"
+                            >
+                                {{ kategori.nama_kategori }}
                             </SelectItem>
                         </SelectContent>
                     </Select>
