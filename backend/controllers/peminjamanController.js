@@ -152,9 +152,13 @@ const peminjamanController = {
         }
 
         try {
-            const peminjaman = await Peminjaman.findById(req.params.id)
+            const filter = req.user.role === 'peminjam'
+                ? { _id: req.params.id, pengguna_id: req.user.id }
+                : { _id: req.params.id }
+            const peminjaman = await Peminjaman.findOne(filter)
             if (!peminjaman) return res.status(404).json({ message: 'Peminjaman tidak ditemukan.' })
-            return res.json(serializePeminjaman(peminjaman))
+            const alat = await Alat.findById(peminjaman.alat_id).select('gambar')
+            return res.json({ ...serializePeminjaman(peminjaman), gambar: alat?.gambar ?? '' })
         } catch (error) {
             return handlePeminjamanError(error, res, 'mengambil detail peminjaman')
         }
@@ -266,6 +270,23 @@ const peminjamanController = {
                 if (!existing) return res.status(404).json({ message: 'Peminjaman tidak ditemukan.' })
                 return res.status(409).json({ message: 'Hanya peminjaman berstatus Menunggu yang dapat diubah.' })
             }
+
+            if (req.body.status === 'Disetujui') {
+                const alat = await Alat.findOneAndUpdate(
+                    {
+                        _id: peminjaman.alat_id,
+                        status_aktif: { $ne: false },
+                        tersedia: { $gte: peminjaman.jumlah },
+                    },
+                    { $inc: { tersedia: -peminjaman.jumlah } },
+                    { new: true }
+                )
+                if (!alat) {
+                    await Peminjaman.updateOne({ _id: peminjaman._id }, { $set: { status: 'Menunggu' } })
+                    return res.status(409).json({ message: 'Stok alat tidak mencukupi untuk menyetujui peminjaman ini.' })
+                }
+            }
+
             return res.json({
                 message: `Peminjaman berhasil ${req.body.status === 'Disetujui' ? 'disetujui' : 'ditolak'}.`,
                 data: serializePeminjaman(peminjaman),

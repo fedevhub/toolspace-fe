@@ -1,6 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Rubik+Mono+One&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -8,6 +8,10 @@
 
 * {
   box-sizing: border-box;
+}
+
+.font-display {
+  font-family: 'Rubik Mono One', 'Arial Black', sans-serif;
 }
 
 html,

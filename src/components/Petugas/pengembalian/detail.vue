@@ -1,201 +1,147 @@
 <script setup>
-import { reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import { Check, ChevronDown, X } from 'lucide-vue-next'
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/dialog'
 import Button from '@/components/ui/button/Button.vue'
-import { Check, X } from 'lucide-vue-next'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { detailPeminjaman } from '@/services/peminjamanService'
 
 const props = defineProps({
     open: Boolean,
-    pengembalian: {
-        type: Object,
-        default: null,
+    pengembalian: { type: Object, default: null },
+    loading: Boolean,
+    errorMessage: { type: String, default: '' },
+})
+const emit = defineEmits(['update:open', 'setujui', 'tolak'])
+
+const form = reactive({ kondisi: '', denda: 0 })
+const gambar = ref('')
+
+watch(
+    () => [props.open, props.pengembalian],
+    async ([buka, item]) => {
+        if (!buka || !item) return
+        form.kondisi = item.kondisi || ''
+        form.denda = item.denda || 0
+        gambar.value = ''
+        try {
+            const response = await detailPeminjaman(item.id)
+            gambar.value = response.data.gambar || ''
+        } catch (error) {
+            console.error('Gagal mengambil gambar alat:', error)
+        }
+    },
+    { immediate: true }
+)
+
+const dendaText = computed({
+    get: () => (form.denda ? Number(form.denda).toLocaleString('id-ID') : ''),
+    set: (nilai) => {
+        form.denda = Number(String(nilai).replace(/\D/g, '')) || 0
     },
 })
 
-const emit = defineEmits(['update:open'])
+const sudahKembali = computed(() => Boolean(props.pengembalian?.sudah_kembali))
+const bisaSetujui = computed(() => !sudahKembali.value && Boolean(form.kondisi))
 
-// State untuk form dan loading
-const loading = ref(false)
-const isEditMode = ref(false)
-
-const form = reactive({
-    kondisi: '',
-    denda: '',
+const baris = computed(() => {
+    const item = props.pengembalian
+    if (!item) return []
+    return [
+        ['Nama peminjam', item.nama_peminjam],
+        ['Alat', item.alat],
+        ['Jumlah', item.jumlah],
+        ['Tanggal Pinjam', item.tanggal_pinjam],
+        ['Batas Kembali', item.batas_kembali],
+        ['Tanggal Kembali', item.tanggal_kembali || item.tanggal_pengajuan || '-'],
+        ['Keterlambatan', `${item.keterlambatan} hari`],
+    ]
 })
 
-// Reset atau sinkronisasi data saat modal dibuka
-watch(() => props.pengembalian, (newVal) => {
-    if (newVal) {
-        form.kondisi = newVal.kondisi || ''
-        form.denda = newVal.denda || ''
-    }
-})
+function setujui() {
+    emit('setujui', { kondisi: form.kondisi, denda: form.denda })
+}
 </script>
 
 <template>
-    <!-- Perbaikan: Tambahkan @update:open agar tombol X bawaan/luar ikut berfungsi menutup dialog -->
     <Dialog :open="open" @update:open="emit('update:open', $event)">
-        <DialogContent
-            class="sm:max-w-[730px] w-[95vw] max-h-[85vh] flex flex-col p-0 gap-0 overflow-hidden rounded-[24px] border border-gray-300"
-            :show-close-button="false">
-
-            <!-- Header -->
-            <DialogHeader
-                class="flex flex-row items-center justify-between px-8 py-6 border-b border-gray-300 shrink-0">
-                <DialogTitle class="text-2xl font-black tracking-[0.12em]">
-                    DETAIL PENGAJUAN PENGEMBALIAN
-                </DialogTitle>
-
-                <!-- Perbaikan: Tombol X diberi fungsi untuk menutup dialog -->
-                <button type="button" class="text-black hover:text-gray-500 cursor-pointer"
+        <DialogContent :show-close-button="false"
+            class="max-h-[92vh] w-[95vw] gap-0 overflow-y-auto rounded-[22px] border border-gray-200 p-0 sm:max-w-[790px]"
+            style="font-family: 'DM Sans', Arial, sans-serif">
+            <DialogHeader class="flex flex-row items-center justify-between border-b border-gray-300 px-12 py-6">
+                <DialogTitle class="font-display text-xl uppercase">Detail Pengembalian</DialogTitle>
+                <DialogDescription class="sr-only">Detail dan verifikasi pengembalian alat</DialogDescription>
+                <button type="button" class="text-black hover:text-gray-500" aria-label="Tutup"
                     @click="emit('update:open', false)">
-                    <X :size="30" :stroke-width="3" />
+                    <X :size="28" :stroke-width="3" />
                 </button>
             </DialogHeader>
 
-            <!-- Scrollable Content -->
-            <div v-if="pengembalian" class="overflow-y-auto flex-1 p-8 md:p-10 space-y-8">
-
-                <!-- Bagian atas: Gambar dan Detail (Grid 2 Kolom) -->
-                <div class="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-8 md:gap-12">
-                    <!-- Gambar alat -->
-                    <div
-                        class="flex items-center justify-center w-full h-[260px] rounded-[24px] border-[10px] border-gray-100 overflow-hidden shrink-0">
-                        <img v-if="pengembalian.gambar" :src="pengembalian.gambar" :alt="pengembalian.alat"
-                            class="w-full h-full object-contain" />
-
-                        <span v-else class="text-sm text-gray-400">
-                            Gambar tidak tersedia
-                        </span>
+            <div v-if="pengembalian" class="px-12 pt-7 pb-8">
+                <div class="flex items-start justify-between gap-8">
+                    <div class="space-y-3 text-[15px]">
+                        <div v-for="[label, nilai] in baris" :key="label" class="grid grid-cols-[130px_16px_1fr]">
+                            <span class="text-gray-500">{{ label }}</span>
+                            <span>:</span>
+                            <span class="font-medium">{{ nilai }}</span>
+                        </div>
                     </div>
 
-                    <!-- Detail peminjaman -->
-                    <div class="space-y-4 text-base">
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">ID Pengembalian</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.id }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Nama Peminjam</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.peminjam }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Alat</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.alat }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Tanggal Pinjam</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.tanggal_pinjam }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Batas Kembali</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.batas_kembali }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Tanggal Kembali</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.tanggal_kembali }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Jumlah</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.jumlah || '-' }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Keterlambatan</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.keterlambatan || '-' }}</span>
-                        </div>
-
-                        <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                            <span class="text-gray-500">Status</span>
-                            <span>:</span>
-                            <span class="font-semibold">{{ pengembalian.status }}</span>
-                        </div>
+                    <div
+                        class="flex h-[206px] w-[206px] shrink-0 items-center justify-center overflow-hidden rounded-[22px] border-[8px] border-gray-100 bg-white">
+                        <img v-if="gambar" :src="gambar" :alt="pengembalian.alat"
+                            class="h-full w-full object-contain" />
+                        <span v-else class="px-2 text-center text-xs text-gray-400">Gambar tidak tersedia</span>
                     </div>
                 </div>
 
-                <!-- Bagian Bawah: Form Input & Select (Kondisi & Denda) Berjajar 2 Kolom -->
-                <div class="border-t border-gray-200 pt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 md:pr-[240px]">
                     <div class="space-y-2">
-                        <label for="kondisi" class="text-sm font-medium text-gray-800">
+                        <label class="text-[15px] font-medium">
                             Kondisi <span class="text-[#DC2626]">*</span>
                         </label>
-
-                        <Select v-model="form.kondisi">
-                            <SelectTrigger id="kondisi" class="h-12 w-full">
+                        <Select v-model="form.kondisi" :disabled="sudahKembali">
+                            <SelectTrigger class="!h-12 w-full">
                                 <SelectValue placeholder="Pilih kondisi alat" />
                             </SelectTrigger>
-
                             <SelectContent>
                                 <SelectItem value="Baik">Baik</SelectItem>
-                                <SelectItem value="Rusak">Rusak</SelectItem>
+                                <SelectItem value="Rusak Ringan">Rusak Ringan</SelectItem>
+                                <SelectItem value="Rusak Berat">Rusak Berat</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div class="space-y-2">
-                        <label for="denda" class="text-sm font-medium text-gray-800">
-                            Denda
-                        </label>
-
-                        <Input id="denda" v-model="form.denda" type="text" placeholder="Masukkan nominal denda"
-                            class="h-9" />
+                        <label class="text-[15px] font-medium">Denda</label>
+                        <Input v-model="dendaText" type="text" inputmode="numeric" placeholder="0"
+                            :disabled="sudahKembali" class="h-12" />
                     </div>
                 </div>
-            </div>
 
-            <!-- Footer -->
-            <DialogFooter class="border-t border-gray-200 px-8 py-4 shrink-0">
-                <Button variant="outline" class="border-black text-black hover:bg-gray-100" type="button"
-                    :disabled="loading" @click="emit('update:open', false)">
-                    <X :size="18" />
-                    {{
-                        loading
-                            ? 'Menyetujui...'
-                            : isEditMode
-                                ? 'Simpan Perubahan'
-                                : 'Tolak'
-                    }}
-                </Button>
-                <Button type="submit" :disabled="loading">
-                    <Check :size="18" />
-                    {{
-                        loading
-                            ? 'Menyetujui...'
-                            : isEditMode
-                                ? 'Simpan Perubahan'
-                                : 'Setujui'
-                    }}
-                </Button>
-            </DialogFooter>
+                <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">{{ errorMessage }}</p>
+
+                <div v-if="!sudahKembali" class="mt-6 flex justify-end gap-3">
+                    <Button v-if="pengembalian.diajukan" variant="outline"
+                        class="h-11 gap-2 border-black px-6 text-black hover:bg-gray-100" :disabled="loading"
+                        @click="emit('tolak')">
+                        <X :size="18" /> Tolak
+                    </Button>
+                    <Button class="h-11 gap-2 px-6" :disabled="loading || !bisaSetujui" @click="setujui">
+                        <Check :size="18" /> Setujui
+                    </Button>
+                </div>
+                <p v-else class="mt-6 text-right text-sm text-gray-500">
+                    Pengembalian ini sudah selesai diproses.
+                </p>
+            </div>
         </DialogContent>
     </Dialog>
 </template>

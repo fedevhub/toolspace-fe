@@ -95,6 +95,9 @@ onMounted(async () => {
         daftarAlat.value = alatResponse.data.filter(
             (alat) => alat.status_aktif !== false && alat.tersedia > 0,
         )
+        if (isPeminjam && route.query.alat && daftarAlat.value.some((alat) => alat.id === route.query.alat)) {
+            form.value.alat_id = route.query.alat
+        }
         if (isEditMode) {
             const response = await detailPeminjaman(route.params.id)
             form.value = {

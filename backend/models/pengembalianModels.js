@@ -11,7 +11,7 @@ const pengembalianSchema = new mongoose.Schema({
     tanggal_pengembalian: { type: String, required: true },
     kondisi: { type: String, required: true, enum: ['Baik', 'Rusak Ringan', 'Rusak Berat'] },
     denda: { type: Number, default: 0, min: 0 },
-    status: { type: String, required: true, enum: ['Selesai', 'Denda'], default: 'Selesai' },
+    status: { type: String, required: true, enum: ['Selesai', 'Denda', 'Menunggu'], default: 'Selesai' },
     keterangan: { type: String, trim: true, default: '', maxlength: 500 },
 }, { timestamps: true })
 

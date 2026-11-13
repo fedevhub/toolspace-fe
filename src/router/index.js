@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import AdminLayout from '@/layouts/AdminLayout.vue'
 import PetugasLayout from '@/layouts/PetugasLayout.vue'
+import PeminjamLayout from '@/layouts/PeminjamLayout.vue'
 import Dashboard from '@/views/admin/Dashboard.vue'
 import Pengguna from '@/views/admin/Pengguna.vue'
 import Alat from '@/views/admin/Alat.vue'
@@ -20,6 +21,8 @@ import PengembalianPetugas from '@/views/petugas/Pengembalian.vue'
 import LaporanPetugas from '@/views/petugas/Laporan.vue'
 import Login from '@/views/auth/Login.vue'
 import DashboardPeminjam from '@/views/peminjam/Dashboard.vue'
+import AlatPeminjam from '@/views/peminjam/Alat.vue'
+import PengembalianPeminjam from '@/views/peminjam/Pengembalian.vue'
 
 const routes = [
     {
@@ -35,6 +38,7 @@ const routes = [
 
     {
         path: '/peminjam',
+        component: PeminjamLayout,
         children: [
             {
                 path: 'dashboard',
@@ -45,6 +49,16 @@ const routes = [
                 path: 'peminjaman-form',
                 name: 'peminjam-peminjaman-form',
                 component: PeminjamanForm,
+            },
+            {
+                path: 'alat',
+                name: 'peminjam-alat',
+                component: AlatPeminjam,
+            },
+            {
+                path: 'pengembalian',
+                name: 'peminjam-pengembalian',
+                component: PengembalianPeminjam,
             },
         ],
     },
@@ -182,7 +196,7 @@ const routes = [
         path: '/admin',
         children: [
             {
-                path: 'pengembalian-form',
+                path: 'pengembalian-form/:id?',
                 name: 'admin-pengembalian-form',
                 component: PengembalianForm
             }
@@ -234,5 +248,33 @@ const router = createRouter({
     history: createWebHistory(),
     routes
 })
+
+router.beforeEach((to) => {
+  const token = localStorage.getItem("token");
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    user = null;
+  }
+
+  const beranda = {
+    admin: "/admin/dashboard",
+    petugas: "/petugas/peminjaman",
+    peminjam: "/peminjam/dashboard",
+  };
+
+  if (to.path === "/login") {
+    return token && user && beranda[user.role] ? beranda[user.role] : true;
+  }
+
+  const area = ["admin", "petugas", "peminjam"].find(
+    (role) => to.path === `/${role}` || to.path.startsWith(`/${role}/`),
+  );
+  if (!area) return true;
+  if (!token || !user) return "/login";
+  if (user.role !== area) return beranda[user.role] ?? "/login";
+  return true;
+});
 
 export default router

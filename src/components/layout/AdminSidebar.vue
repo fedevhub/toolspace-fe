@@ -15,6 +15,7 @@ import {
 
 import { ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import api from '@/lib/api'
 
 import {
     AlertDialog,
@@ -33,10 +34,15 @@ const showLogoutDialog = ref(false)
 
 const handleLogout = async () => {
     try {
+        await api.post('/auth/logout')
+    } catch (error) {
+        console.error('Gagal logout di server:', error)
+    } finally {
+        localStorage.removeItem('token')
+        localStorage.removeItem('isLogin')
+        localStorage.removeItem('user')
         showLogoutDialog.value = false
         await router.push('/login')
-    } catch (error) {
-        console.error('Gagal logout:', error)
     }
 }
 </script>
