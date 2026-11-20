@@ -16,5 +16,5 @@ export const tolakPengembalian = (peminjamanId) =>
 
 // Peminjam
 export const getPengembalianSaya = () => api.get("/pengembalian/milik-saya");
-export const ajukanPengembalian = (peminjamanId) =>
-  api.post("/pengembalian/ajukan", { peminjaman_id: peminjamanId });
+export const ajukanPengembalian = (peminjamanId, data = {}) =>
+  api.post("/pengembalian/ajukan", { peminjaman_id: peminjamanId, ...data });

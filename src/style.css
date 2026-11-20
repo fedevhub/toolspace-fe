@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Rubik+Mono+One&display=swap');
 @import "tailwindcss";
+
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -26,6 +27,11 @@ body {
   background: #f5f5f5;
   color: #111111;
 }
+
+/* Kepadatan tabel konsisten untuk seluruh role. */
+main table { font-size: 0.8125rem; }
+main table th { padding: 0.7rem 0.95rem !important; }
+main table td { padding: 0.75rem 0.95rem !important; }
 
 @theme inline {
   --font-heading: var(--font-sans);

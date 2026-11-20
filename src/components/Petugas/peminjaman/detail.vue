@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { Check, X } from 'lucide-vue-next'
+import { AlertCircle, Check, ImageOff, X } from 'lucide-vue-next'
 import {
     Dialog,
     DialogContent,
@@ -20,17 +20,21 @@ const props = defineProps({
 const emit = defineEmits(['update:open', 'ubah-status'])
 
 const gambar = ref('')
+const loadingGambar = ref(false)
 
 watch(
     () => [props.open, props.peminjaman],
     async ([buka, item]) => {
         if (!buka || !item) return
         gambar.value = ''
+        loadingGambar.value = true
         try {
             const response = await detailPeminjaman(item.id)
-            gambar.value = response.data.gambar || ''
+            gambar.value = response.data?.gambar || ''
         } catch (error) {
             console.error('Gagal mengambil gambar alat:', error)
+        } finally {
+            loadingGambar.value = false
         }
     },
     { immediate: true }
@@ -40,61 +44,117 @@ const baris = computed(() => {
     const item = props.peminjaman
     if (!item) return []
     return [
-        ['Nama peminjam', item.nama_peminjam],
+        ['Kode Pengajuan', item.kode_peminjaman],
+        ['Nama Peminjam', item.nama_peminjam],
         ['Alat', item.alat],
-        ['Jumlah', item.jumlah],
+        ['Jumlah', `${item.jumlah} unit`],
         ['Tanggal Pinjam', item.tanggal_pinjam],
         ['Tanggal Kembali', item.tanggal_kembali],
         ['Keperluan', item.keperluan || '-'],
     ]
 })
+
+function statusBadgeClass(status) {
+    const map = {
+        menunggu: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20',
+        disetujui: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20',
+        dipinjam: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
+        ditolak: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
+    }
+    return map[String(status ?? '').toLowerCase()] ?? 'bg-gray-100 text-gray-700'
+}
 </script>
 
 <template>
     <Dialog :open="open" @update:open="emit('update:open', $event)">
         <DialogContent :show-close-button="false"
-            class="w-[95vw] gap-0 overflow-hidden rounded-[22px] border border-gray-200 p-0 sm:max-w-[790px]"
+            class="w-[95vw] gap-0 overflow-hidden rounded-2xl border border-gray-200 p-0 sm:max-w-[680px]"
             style="font-family: 'DM Sans', Arial, sans-serif">
-            <DialogHeader class="flex flex-row items-center justify-between border-b border-gray-300 px-12 py-6">
-                <DialogTitle class="font-display text-xl uppercase">Detail Pengajuan Peminjaman</DialogTitle>
-                <DialogDescription class="sr-only">Detail pengajuan peminjaman alat</DialogDescription>
-                <button type="button" class="text-black hover:text-gray-500" aria-label="Tutup"
+            <!-- Header -->
+            <DialogHeader class="flex flex-row items-center justify-between border-b border-gray-100 px-6 py-5 md:px-8">
+                <div>
+                    <DialogTitle class="font-display text-lg font-bold tracking-wide text-gray-900 md:text-xl">
+                        DETAIL PENGAJUAN PEMINJAMAN
+                    </DialogTitle>
+                    <DialogDescription class="mt-0.5 text-xs text-[#697386]">
+                        Periksa rincian pengajuan sebelum menyetujui atau menolak peminjaman.
+                    </DialogDescription>
+                </div>
+
+                <button type="button" aria-label="Tutup"
+                    class="flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-black"
                     @click="emit('update:open', false)">
-                    <X :size="28" :stroke-width="3" />
+                    <X :size="20" />
                 </button>
             </DialogHeader>
 
-            <div v-if="peminjaman" class="px-12 pt-7 pb-8">
-                <div class="flex items-start justify-between gap-8">
-                    <div class="space-y-3 text-[15px]">
-                        <div v-for="[label, nilai] in baris" :key="label" class="grid grid-cols-[130px_16px_1fr]">
+            <!-- Body -->
+            <div v-if="peminjaman" class="px-6 py-6 md:px-8">
+                <div class="flex flex-col-reverse items-start justify-between gap-6 sm:flex-row">
+                    <!-- Detail List -->
+                    <div class="w-full space-y-3 text-sm">
+                        <div v-for="[label, nilai] in baris" :key="label"
+                            class="grid grid-cols-[135px_12px_1fr] items-baseline">
                             <span class="text-gray-500">{{ label }}</span>
-                            <span>:</span>
-                            <span class="font-medium">{{ nilai }}</span>
+                            <span class="text-gray-400">:</span>
+                            <span class="font-semibold text-gray-900">{{ nilai }}</span>
+                        </div>
+
+                        <div class="grid grid-cols-[135px_12px_1fr] items-center pt-0.5">
+                            <span class="text-gray-500">Status</span>
+                            <span class="text-gray-400">:</span>
+                            <div>
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold"
+                                    :class="statusBadgeClass(peminjaman.status)">
+                                    {{ peminjaman.status }}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
+                    <!-- Preview Gambar Alat -->
                     <div
-                        class="flex h-[206px] w-[206px] shrink-0 items-center justify-center overflow-hidden rounded-[22px] border-[8px] border-gray-100 bg-white">
-                        <img v-if="gambar" :src="gambar" :alt="peminjaman.alat" class="h-full w-full object-contain" />
-                        <span v-else class="px-2 text-center text-xs text-gray-400">Gambar tidak tersedia</span>
+                        class="flex h-40 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200/80 bg-[#F8F9FA] p-3 sm:h-44 sm:w-44">
+                        <div v-if="loadingGambar" class="h-full w-full animate-pulse rounded-xl bg-gray-200/70" />
+                        <img v-else-if="gambar" :src="gambar" :alt="peminjaman.alat"
+                            class="h-full w-full object-contain" />
+                        <div v-else class="flex flex-col items-center gap-1.5 text-center text-gray-400">
+                            <ImageOff :size="24" stroke-width="1.5" />
+                            <span class="text-[11px] font-medium">Gambar tidak tersedia</span>
+                        </div>
                     </div>
                 </div>
 
-                <p v-if="errorMessage" role="alert" class="mt-4 text-sm text-red-600">{{ errorMessage }}</p>
-
-                <div v-if="peminjaman.status === 'Menunggu'" class="mt-6 flex justify-end gap-3">
-                    <Button variant="outline" class="h-11 gap-2 border-black px-6 text-black hover:bg-gray-100"
-                        :disabled="loading" @click="emit('ubah-status', 'Ditolak')">
-                        <X :size="18" /> Tolak
-                    </Button>
-                    <Button class="h-11 gap-2 px-6" :disabled="loading" @click="emit('ubah-status', 'Disetujui')">
-                        <Check :size="18" /> Setujui
-                    </Button>
+                <!-- Error Alert -->
+                <div v-if="errorMessage" role="alert"
+                    class="mt-5 flex items-center gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    <AlertCircle :size="18" class="shrink-0" />
+                    <span>{{ errorMessage }}</span>
                 </div>
-                <p v-else class="mt-6 text-right text-sm text-gray-500">
-                    Pengajuan ini sudah <span class="font-bold">{{ peminjaman.status }}</span>.
-                </p>
+
+                <!-- Action Footer -->
+                <div
+                    class="mt-7 flex flex-col-reverse items-center justify-end gap-3 border-t border-gray-100 pt-5 sm:flex-row">
+                    <template v-if="peminjaman.status === 'Menunggu'">
+                        <Button type="button" variant="outline"
+                            class="h-11 w-full gap-2 rounded-xl border-red-200 bg-red-50/50 px-5 font-semibold text-red-600 hover:bg-red-100 hover:text-red-700 sm:w-auto"
+                            :disabled="loading" @click="emit('ubah-status', 'Ditolak')">
+                            <X :size="17" />
+                            Tolak Pengajuan
+                        </Button>
+                        <Button type="button"
+                            class="h-11 w-full gap-2 rounded-xl bg-black px-6 font-semibold text-white hover:bg-black/85 sm:w-auto"
+                            :disabled="loading" @click="emit('ubah-status', 'Disetujui')">
+                            <Check :size="17" />
+                            {{ loading ? 'Memproses...' : 'Setujui Peminjaman' }}
+                        </Button>
+                    </template>
+
+                    <p v-else class="text-sm text-gray-500">
+                        Pengajuan ini sudah berstatus
+                        <span class="font-bold text-gray-900">{{ peminjaman.status }}</span>.
+                    </p>
+                </div>
             </div>
         </DialogContent>
     </Dialog>

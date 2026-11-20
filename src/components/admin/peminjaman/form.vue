@@ -51,6 +51,12 @@ function formatTanggal(value) {
     return `${day}-${month}-${year}`
 }
 
+// Input kalender menghasilkan YYYY-MM-DD, sedangkan API peminjaman menerima DD/MM/YYYY.
+function formatTanggalUntukApi(value) {
+    const [year, month, day] = value.split('-')
+    return `${day}/${month}/${year}`
+}
+
 function tampilkanTanggal(value) {
     return value ? formatTanggal(value) : ''
 }
@@ -141,8 +147,8 @@ async function handleSubmit() {
     try {
         const data = {
             ...form.value,
-            tanggal_pinjam: formatTanggal(form.value.tanggal_pinjam),
-            tanggal_kembali: formatTanggal(form.value.tanggal_kembali),
+            tanggal_pinjam: formatTanggalUntukApi(form.value.tanggal_pinjam),
+            tanggal_kembali: formatTanggalUntukApi(form.value.tanggal_kembali),
             jumlah: Number(form.value.jumlah),
             keperluan: form.value.keperluan.trim(),
         }
@@ -151,7 +157,7 @@ async function handleSubmit() {
         } else {
             await tambahPeminjaman(data)
         }
-        await router.push(isPeminjam ? '/peminjam/dashboard' : '/admin/peminjaman')
+        await router.push(isPeminjam ? '/peminjam/alat' : '/admin/peminjaman')
     } catch (error) {
         console.error('Gagal menyimpan peminjaman:', error)
         errorMessage.value = error.response?.data?.message ?? 'Gagal menyimpan peminjaman.'
@@ -162,29 +168,31 @@ async function handleSubmit() {
 </script>
 
 <template>
-    <div class="px-8 pb-16 pt-8 md:px-20">
+    <div :class="isPeminjam ? 'bg-white px-8 pb-16 pt-8' : 'px-8 pb-16 pt-8 md:px-20'" style="font-family: 'DM Sans', Arial, sans-serif">
         <Button
             type="button"
             variant="outline"
             class="gap-2"
-            @click="router.push(isPeminjam ? '/peminjam/dashboard' : '/admin/peminjaman')"
+            @click="router.push(isPeminjam ? '/peminjam/alat' : '/admin/peminjaman')"
         >
             <ArrowLeft :size="16" />
             Kembali
         </Button>
 
-        <h1 class="pt-3 text-3xl font-bold">{{ isEditMode ? 'Edit Peminjaman' : 'Tambah Peminjaman' }}</h1>
+        <h1 :class="isPeminjam ? 'mt-5 font-display text-3xl tracking-wide' : 'pt-3 text-3xl font-bold'">{{ isEditMode ? 'Edit Peminjaman' : isPeminjam ? 'AJUKAN PEMINJAMAN' : 'Tambah Peminjaman' }}</h1>
+        <p v-if="isPeminjam" class="mt-1 text-sm text-[#697386]">Isi data peminjaman alat dengan lengkap dan benar.</p>
 
-        <form class="mt-4 rounded-xl border bg-white p-6 shadow-sm md:p-8" @submit.prevent="handleSubmit">
+        <form :class="isPeminjam ? 'mt-5 rounded-2xl border border-[#dfe3e8] bg-white p-6 md:p-8' : 'mt-4 rounded-xl border bg-white p-6 shadow-sm md:p-8'" @submit.prevent="handleSubmit">
             <div v-if="loading && !daftarPeminjam.length && !daftarAlat.length" class="py-4 text-gray-500">
                 Memuat data pengguna dan alat...
             </div>
             <div v-else class="grid grid-cols-1 items-start gap-x-7 gap-y-4 md:grid-cols-2">
                 <div>
-                    <label v-if="!isPeminjam" for="peminjam" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'" v-if="!isPeminjam" for="peminjam">
                         Nama Peminjam <span class="text-red-600">*</span>
                     </label>
-                    <div v-if="isPeminjam" class="flex h-10 items-center rounded-md border px-3 text-sm text-gray-700">
+                    <label v-if="isPeminjam" class="mb-2 block text-sm font-medium">Nama Peminjam</label>
+                    <div v-if="isPeminjam" class="flex h-9 items-center rounded-md border border-[#d8d8d8] bg-[#f0f0f0] px-3 text-sm text-[#697386]">
                         {{ penggunaLogin?.nama || penggunaLogin?.username }}
                     </div>
                     <Select v-else v-model="form.pengguna_id" required>
@@ -203,7 +211,7 @@ async function handleSubmit() {
                 </div>
 
                 <div>
-                    <label for="keperluan" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label for="keperluan" :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'">
                         Keperluan <span class="text-red-600">*</span>
                     </label>
                     <Select v-model="form.keperluan">
@@ -220,7 +228,7 @@ async function handleSubmit() {
                 </div>
 
                 <div>
-                    <label for="alat" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label for="alat" :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'">
                         Alat <span class="text-red-600">*</span>
                     </label>
                     <Select v-model="form.alat_id" required>
@@ -239,14 +247,14 @@ async function handleSubmit() {
                 </div>
 
                 <div>
-                    <label for="jumlah" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label for="jumlah" :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'">
                         Jumlah <span class="text-red-600">*</span>
                     </label>
                     <Input id="jumlah" v-model="form.jumlah" type="number" min="1" step="1" required />
                 </div>
 
                 <div>
-                    <label for="tanggal_pinjam" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label for="tanggal_pinjam" :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'">
                         Tanggal Pinjam <span class="text-red-600">*</span>
                     </label>
                     <div class="relative">
@@ -279,7 +287,7 @@ async function handleSubmit() {
                 </div>
 
                 <div>
-                    <label for="tanggal_kembali" class="mb-2 block text-sm font-medium text-gray-800">
+                    <label for="tanggal_kembali" :class="isPeminjam ? 'mb-2 block text-sm font-medium' : 'mb-2 block text-sm font-medium text-gray-800'">
                         Tanggal Kembali <span class="text-red-600">*</span>
                     </label>
                     <div class="relative">
@@ -316,8 +324,8 @@ async function handleSubmit() {
                 {{ errorMessage }}
             </p>
 
-            <div class="mt-6 flex justify-end border-t pt-4">
-                <Button type="submit" :disabled="loading || !daftarPeminjam.length || !daftarAlat.length">
+            <div :class="isPeminjam ? 'mt-11 flex justify-end gap-3' : 'mt-6 flex justify-end border-t pt-4'">
+                <Button type="submit" :class="isPeminjam ? 'h-11 rounded-xl bg-black px-6 font-bold text-white hover:bg-black/80' : ''" :disabled="loading || !daftarPeminjam.length || !daftarAlat.length">
                     <Save :size="18" />
                     {{ loading ? 'Menyimpan...' : isEditMode ? 'Simpan Perubahan' : 'Ajukan Peminjaman' }}
                 </Button>

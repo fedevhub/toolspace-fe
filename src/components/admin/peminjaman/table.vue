@@ -1,145 +1,194 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
+    ChevronLeft,
+    ChevronRight,
+    ClipboardList,
+    Pencil,
+    Trash2,
+} from 'lucide-vue-next'
 import Button from '@/components/ui/button/Button.vue'
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-vue-next'
 
-const props = defineProps({
+defineProps({
     peminjaman: {
         type: Array,
         default: () => [],
     },
-    loading: Boolean,
+    loading: {
+        type: Boolean,
+        default: false,
+    },
+    halamanSaatIni: {
+        type: Number,
+        default: 1,
+    },
+    totalHalaman: {
+        type: Number,
+        default: 1,
+    },
+    infoRentang: {
+        type: Object,
+        default: () => ({ mulai: 0, akhir: 0, total: 0 }),
+    },
 })
 
-const emit = defineEmits(['edit', 'delete'])
-const halaman = ref(1)
-const perHalaman = 10
-const jumlahHalaman = computed(() => Math.max(1, Math.ceil(props.peminjaman.length / perHalaman)))
-const barisDitampilkan = computed(() => {
-    const mulai = (halaman.value - 1) * perHalaman
-    return props.peminjaman.slice(mulai, mulai + perHalaman)
-})
-const rentangAwal = computed(() => props.peminjaman.length ? (halaman.value - 1) * perHalaman + 1 : 0)
-const rentangAkhir = computed(() => Math.min(halaman.value * perHalaman, props.peminjaman.length))
+const emit = defineEmits(['edit', 'delete', 'ganti-halaman'])
 
-watch(() => props.peminjaman, () => {
-    halaman.value = 1
-})
+function statusBadgeClass(status) {
+    const map = {
+        menunggu: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20',
+        disetujui: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20',
+        dipinjam: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
+        ditolak: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20',
+    }
+    return map[String(status ?? '').toLowerCase()] ?? 'bg-gray-100 text-gray-700'
+}
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-xs">
         <div class="overflow-x-auto">
-            <Table class="w-full border-collapse">
-                <TableHeader class="bg-black hover:bg-black">
-                    <TableRow class="border-0 hover:bg-black">
-                        <TableHead class="h-12 px-10 text-xs font-semibold text-white">ID</TableHead>
-                        <TableHead class="h-12 text-xs font-semibold text-white">Peminjam</TableHead>
-                        <TableHead class="h-12 text-xs font-semibold text-white">Alat</TableHead>
-                        <TableHead class="h-12 text-xs font-semibold text-white">Tanggal</TableHead>
-                        <TableHead class="h-12 text-xs font-semibold text-white">Jumlah</TableHead>
-                        <TableHead class="h-12 text-xs font-semibold text-white">Status</TableHead>
-                        <TableHead class="h-12 text-center text-xs font-semibold text-white">Aksi</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableRow v-if="loading">
-                        <TableCell colspan="7" class="py-8 text-center text-gray-500">Memuat data peminjaman...</TableCell>
-                    </TableRow>
-                    <TableRow v-else-if="!barisDitampilkan.length">
-                        <TableCell colspan="7" class="py-8 text-center text-gray-500">
-                            {{ peminjaman.length ? 'Tidak ada peminjaman yang cocok dengan filter.' : 'Belum ada data peminjaman.' }}
-                        </TableCell>
-                    </TableRow>
-                    <template v-else>
-                        <TableRow v-for="item in barisDitampilkan" :key="item.id">
-                            <TableCell class="w-30 px-10">{{ item.kode_peminjaman }}</TableCell>
-                            <TableCell class="w-40 font-medium">{{ item.nama_peminjam }}</TableCell>
-                            <TableCell class="w-40">{{ item.alat }}</TableCell>
-                            <TableCell class="whitespace-nowrap font-medium">
-                                {{ item.tanggal_pinjam }}
-                            </TableCell>
-                            <TableCell>{{ item.jumlah }}</TableCell>
-                            <TableCell>
-                                <span :class="{
-                                    'font-semibold text-[#BA3800]': item.status === 'Menunggu',
-                                    'font-semibold text-[#03543F]': item.status === 'Disetujui',
-                                    'font-semibold text-[#9B1C1C]': item.status === 'Ditolak',
-                                    'font-semibold text-[#1E429F]': item.status === 'Dipinjam',
-                                }">{{ item.status }}</span>
-                            </TableCell>
-                            <TableCell>
-                                <div class="flex items-center justify-center gap-2">
-                                    <Button
-                                        size="icon"
-                                        aria-label="Edit peminjaman"
-                                        class="size-8 rounded-full bg-[#E1EFFE] hover:bg-[#d2e7fd]"
-                                        @click="emit('edit', item)"
-                                    >
-                                        <Pencil class="h-4 w-4 text-[#0284C7]" />
-                                    </Button>
-                                    <Button
-                                        size="icon"
-                                        aria-label="Hapus peminjaman"
-                                        class="size-8 rounded-full bg-[#FEE2E2] hover:bg-[#fdd5d5]"
-                                        @click="emit('delete', item)"
-                                    >
-                                        <Trash2 class="h-4 w-4 text-[#DC2626]" />
-                                    </Button>
-                                </div>
-                            </TableCell>
-                        </TableRow>
+            <table class="w-full min-w-[900px] border-collapse text-left text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-black text-xs font-semibold tracking-wider text-white">
+                        <th class="w-36 px-6 py-4">Kode</th>
+                        <th class="px-6 py-4">Peminjam</th>
+                        <th class="px-6 py-4">Alat</th>
+                        <th class="px-6 py-4">Tanggal Pinjam</th>
+                        <th class="px-6 py-4 text-center">Jumlah</th>
+                        <th class="px-6 py-4">Status</th>
+                        <th class="w-32 px-6 py-4 text-center">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-100">
+                    <!-- Loading Skeleton -->
+                    <template v-if="loading && peminjaman.length === 0">
+                        <tr v-for="n in 5" :key="n" class="animate-pulse">
+                            <td class="px-6 py-4">
+                                <div class="h-5 w-20 rounded-md bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-36 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-36 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-24 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="mx-auto h-4 w-10 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-6 w-20 rounded-full bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="mx-auto h-8 w-20 rounded-lg bg-gray-100" />
+                            </td>
+                        </tr>
                     </template>
-                </TableBody>
-                <TableFooter>
-                    <TableRow class="hover:bg-transparent">
-                        <TableCell colspan="7" class="p-0">
-                            <div class="flex w-full items-center px-6 py-3 sm:px-10">
-                                <span class="whitespace-nowrap text-sm text-gray-500">
-                                    Menampilkan
-                                    <span class="font-bold text-gray-800">{{ rentangAwal }}–{{ rentangAkhir }}</span>
-                                    dari <span class="font-bold text-gray-800">{{ peminjaman.length }}</span>
-                                    data peminjaman
-                                </span>
-                                <div class="ml-auto flex items-center gap-1">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        class="size-8"
-                                        aria-label="Halaman sebelumnya"
-                                        :disabled="halaman <= 1"
-                                        @click="halaman -= 1"
-                                    >
-                                        <ChevronLeft :size="16" />
-                                    </Button>
-                                    <span class="flex size-8 items-center justify-center rounded-md bg-black text-sm font-semibold text-white">
-                                        {{ halaman }}
-                                    </span>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        class="size-8"
-                                        aria-label="Halaman berikutnya"
-                                        :disabled="halaman >= jumlahHalaman"
-                                        @click="halaman += 1"
-                                    >
-                                        <ChevronRight :size="16" />
-                                    </Button>
-                                </div>
+
+                    <!-- Empty State -->
+                    <tr v-else-if="peminjaman.length === 0">
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <ClipboardList :size="44" stroke-width="1.25" class="text-gray-400" />
+                                <p class="mt-3 text-base font-semibold text-gray-900">
+                                    Tidak ada data peminjaman
+                                </p>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Belum ada pengajuan peminjaman atau hasil filter tidak ditemukan.
+                                </p>
                             </div>
-                        </TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
+                        </td>
+                    </tr>
+
+                    <!-- Data Rows -->
+                    <tr v-for="item in peminjaman" v-else :key="item.id" class="transition-colors hover:bg-gray-50/80">
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-flex items-center rounded-md bg-gray-100 px-2.5 py-1 font-mono text-xs font-semibold text-gray-700">
+                                {{ item.kode_peminjaman }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-gray-900">
+                            {{ item.nama_peminjam }}
+                        </td>
+                        <td class="px-6 py-4 text-gray-700">
+                            {{ item.alat }}
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-gray-600">
+                            {{ item.tanggal_pinjam }}
+                        </td>
+                        <td class="px-6 py-4 text-center font-semibold text-gray-900">
+                            {{ item.jumlah }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap"
+                                :class="statusBadgeClass(item.status)">
+                                {{ item.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <Button type="button" size="icon" variant="outline" title="Edit peminjaman"
+                                    aria-label="Edit peminjaman"
+                                    class="size-8 rounded-lg border-[#dfe3e8] bg-blue-50/60 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+                                    @click="emit('edit', item)">
+                                    <Pencil :size="14" />
+                                </Button>
+
+                                <Button type="button" size="icon" variant="outline" title="Hapus peminjaman"
+                                    aria-label="Hapus peminjaman"
+                                    class="size-8 rounded-lg border-[#dfe3e8] bg-red-50/60 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                    @click="emit('delete', item)">
+                                    <Trash2 :size="14" />
+                                </Button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+
+        <!-- Pagination Footer -->
+        <div v-if="!loading && infoRentang.total > 0"
+            class="flex flex-col items-center justify-between gap-4 border-t border-gray-100 bg-white px-6 py-4 sm:flex-row">
+            <p class="text-xs text-gray-500">
+                Menampilkan
+                <span class="font-semibold text-gray-900">{{ infoRentang.mulai }}</span>
+                –
+                <span class="font-semibold text-gray-900">{{ infoRentang.akhir }}</span>
+                dari
+                <span class="font-semibold text-gray-900">{{ infoRentang.total }}</span>
+                peminjaman
+            </p>
+
+            <div class="flex items-center gap-1.5">
+                <Button type="button" variant="outline" size="sm"
+                    class="h-8 rounded-lg border-[#dfe3e8] px-2.5 text-xs font-semibold text-gray-700 disabled:opacity-40"
+                    :disabled="halamanSaatIni <= 1" @click="emit('ganti-halaman', halamanSaatIni - 1)">
+                    <ChevronLeft :size="15" class="mr-0.5" />
+                    Sebelumnya
+                </Button>
+
+                <button v-for="nomor in totalHalaman" :key="nomor" type="button"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors"
+                    :class="halamanSaatIni === nomor
+                            ? 'bg-black text-white'
+                            : 'border border-[#dfe3e8] bg-white text-gray-700 hover:bg-gray-50'
+                        " @click="emit('ganti-halaman', nomor)">
+                    {{ nomor }}
+                </button>
+
+                <Button type="button" variant="outline" size="sm"
+                    class="h-8 rounded-lg border-[#dfe3e8] px-2.5 text-xs font-semibold text-gray-700 disabled:opacity-40"
+                    :disabled="halamanSaatIni >= totalHalaman" @click="emit('ganti-halaman', halamanSaatIni + 1)">
+                    Berikutnya
+                    <ChevronRight :size="15" class="ml-0.5" />
+                </Button>
+            </div>
+        </div>
+    </section>
 </template>

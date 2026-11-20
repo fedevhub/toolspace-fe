@@ -1,17 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { CalendarDays, Plus, Search } from 'lucide-vue-next'
+import { AlertCircle, CalendarDays, Plus, Search } from 'lucide-vue-next'
 import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date'
 import Button from '@/components/ui/button/Button.vue'
 import { Input } from '@/components/ui/input'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
 import Calendar from '@/components/ui/calendar/Calendar.vue'
 import {
     Popover,
@@ -27,27 +20,18 @@ const loading = ref(true)
 const errorMessage = ref('')
 const pencarian = ref('')
 const tanggalTerpilih = ref()
-const statusTerpilih = ref('Semua Status')
+const statusTerpilih = ref('Semua')
+const opsiStatus = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak']
+
 const placeholderTanggal = today(getLocalTimeZone())
 const dateFormatter = new DateFormatter('id-ID', { dateStyle: 'medium' })
 
-const peminjamanDitampilkan = computed(() => {
-    const query = pencarian.value.trim().toLowerCase()
-    return daftarPeminjaman.value.filter((peminjaman) => {
-        const cocokPencarian = !query ||
-            [
-                peminjaman.nama_peminjam,
-                peminjaman.alat,
-                peminjaman.kategori_alat,
-                peminjaman.kode_peminjaman,
-            ]
-                .some((value) => value?.toLowerCase().includes(query))
-        const cocokTanggal = !tanggalTerpilih.value ||
-            tanggalKeIso(peminjaman.tanggal_pinjam) === tanggalTerpilih.value.toString()
-        const cocokStatus = statusTerpilih.value === 'Semua Status' ||
-            peminjaman.status === statusTerpilih.value
-        return cocokPencarian && cocokTanggal && cocokStatus
-    })
+// Pagination State
+const halamanSaatIni = ref(1)
+const itemPerHalaman = ref(8)
+
+watch([pencarian, tanggalTerpilih, statusTerpilih], () => {
+    halamanSaatIni.value = 1
 })
 
 function tanggalKeIso(value) {
@@ -56,15 +40,60 @@ function tanggalKeIso(value) {
     return year && month && day ? `${year}-${month}-${day}` : value
 }
 
+const peminjamanDitampilkan = computed(() => {
+    const query = pencarian.value.trim().toLowerCase()
+
+    return daftarPeminjaman.value.filter((peminjaman) => {
+        const cocokPencarian =
+            !query ||
+            [
+                peminjaman.nama_peminjam,
+                peminjaman.alat,
+                peminjaman.kategori_alat,
+                peminjaman.kode_peminjaman,
+            ].some((value) => String(value ?? '').toLowerCase().includes(query))
+
+        const cocokTanggal =
+            !tanggalTerpilih.value ||
+            tanggalKeIso(peminjaman.tanggal_pinjam) === tanggalTerpilih.value.toString()
+
+        const cocokStatus =
+            statusTerpilih.value === 'Semua' ||
+            String(peminjaman.status ?? '').toLowerCase() === statusTerpilih.value.toLowerCase()
+
+        return cocokPencarian && cocokTanggal && cocokStatus
+    })
+})
+
+const totalHalaman = computed(() =>
+    Math.max(1, Math.ceil(peminjamanDitampilkan.value.length / itemPerHalaman.value))
+)
+
+const peminjamanPaginasi = computed(() => {
+    const mulai = (halamanSaatIni.value - 1) * itemPerHalaman.value
+    return peminjamanDitampilkan.value.slice(mulai, mulai + itemPerHalaman.value)
+})
+
+const infoRentangData = computed(() => {
+    if (!peminjamanDitampilkan.value.length) return { mulai: 0, akhir: 0, total: 0 }
+    const mulai = (halamanSaatIni.value - 1) * itemPerHalaman.value + 1
+    const akhir = Math.min(
+        halamanSaatIni.value * itemPerHalaman.value,
+        peminjamanDitampilkan.value.length
+    )
+    return { mulai, akhir, total: peminjamanDitampilkan.value.length }
+})
+
 async function ambilPeminjaman() {
     loading.value = true
     errorMessage.value = ''
     try {
         const response = await getPeminjaman()
-        if (!Array.isArray(response.data)) {
+        const peminjaman = response.data.data ?? response.data
+        if (!Array.isArray(peminjaman)) {
             throw new TypeError('Respons API peminjaman tidak berisi daftar peminjaman.')
         }
-        daftarPeminjaman.value = response.data
+        daftarPeminjaman.value = peminjaman
     } catch (error) {
         console.error('Gagal mengambil data peminjaman:', error)
         errorMessage.value = error.response?.data?.message ?? 'Gagal mengambil data peminjaman.'
@@ -82,7 +111,13 @@ async function hapusItemPeminjaman(item) {
 
     try {
         await hapusPeminjaman(item.id)
-        daftarPeminjaman.value = daftarPeminjaman.value.filter((peminjaman) => peminjaman.id !== item.id)
+        daftarPeminjaman.value = daftarPeminjaman.value.filter(
+            (peminjaman) => peminjaman.id !== item.id
+        )
+
+        if (halamanSaatIni.value > totalHalaman.value) {
+            halamanSaatIni.value = totalHalaman.value
+        }
     } catch (error) {
         console.error('Gagal menghapus peminjaman:', error)
         errorMessage.value = error.response?.data?.message ?? 'Gagal menghapus peminjaman.'
@@ -93,72 +128,90 @@ onMounted(ambilPeminjaman)
 </script>
 
 <template>
-    <div class="p-8">
-        <h1 class="text-3xl font-bold">Kelola Peminjaman</h1>
-        <p class="font-medium text-gray-500">Kelola data dan pantau status peminjaman alat.</p>
-        <div class="flex w-full flex-wrap items-center gap-3 py-5">
-            <div class="relative w-full sm:w-72 lg:w-80 sm:flex-none">
-                <Search class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" :size="18" />
-                <Input
-                    v-model="pencarian"
-                    type="search"
-                    placeholder="Cari nama alat atau kategori..."
-                    class="h-10 bg-white pl-10"
-                />
+    <main class="min-h-full bg-[#F8F9FA] p-6 md:p-8" style="font-family: 'DM Sans', Arial, sans-serif">
+        <!-- Header -->
+        <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+            <div>
+                <h1 class="font-display text-2xl font-bold tracking-wide text-gray-900 md:text-3xl">
+                    KELOLA PEMINJAMAN
+                </h1>
+                <p class="mt-1.5 text-sm text-[#697386] md:text-base">
+                    Kelola pengajuan dan pantau status peminjaman alat dalam sistem.
+                </p>
             </div>
 
-            
+            <Button
+                class="h-11 gap-2 rounded-xl bg-black px-5 text-sm font-semibold text-white shadow-xs hover:bg-black/85"
+                @click="router.push('/admin/peminjaman-form')">
+                <Plus :size="18" />
+                Tambah Peminjaman
+            </Button>
+        </div>
 
-            <div class="ml-auto flex items-center gap-3">
+        <!-- Search, Date Filter & Status Pills -->
+        <div class="mt-6 flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-[320px]">
+                    <Search :size="18"
+                        class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085]" />
+                    <Input v-model="pencarian" type="search" placeholder="Cari kode, peminjam, atau alat..."
+                        class="h-11 rounded-xl border-[#dfe3e8] bg-white pl-10 text-sm shadow-xs focus-visible:border-black" />
+                </div>
+
+                <!-- Date Picker Popover -->
                 <Popover>
                     <PopoverTrigger as-child>
-                        <Button variant="outline" class="h-10 gap-2 bg-white">
-                            {{ tanggalTerpilih
-                                ? dateFormatter.format(tanggalTerpilih.toDate(getLocalTimeZone()))
-                                : 'Pilih Tanggal' }}
-                            <CalendarDays :size="17" />
+                        <Button variant="outline"
+                            class="h-11 justify-between gap-2.5 rounded-xl border-[#dfe3e8] bg-white px-4 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50">
+                            <span>
+                                {{
+                                    tanggalTerpilih
+                                        ? dateFormatter.format(tanggalTerpilih.toDate(getLocalTimeZone()))
+                                        : 'Filter Tanggal'
+                                }}
+                            </span>
+                            <CalendarDays :size="17" class="text-gray-500" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="end" class="w-auto p-0">
+                    <PopoverContent align="start" class="w-auto rounded-2xl p-0">
                         <Calendar v-model="tanggalTerpilih" :default-placeholder="placeholderTanggal" locale="id-ID"
                             :initial-focus="true" />
-                        <div v-if="tanggalTerpilih" class="border-t p-2">
-                            <Button variant="ghost" class="w-full" @click="tanggalTerpilih = undefined">
-                                Hapus tanggal
+                        <div v-if="tanggalTerpilih" class="border-t border-gray-100 p-2">
+                            <Button variant="ghost" size="sm"
+                                class="w-full rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 hover:text-red-700"
+                                @click="tanggalTerpilih = undefined">
+                                Hapus filter tanggal
                             </Button>
                         </div>
                     </PopoverContent>
                 </Popover>
+            </div>
 
-                <Select v-model="statusTerpilih">
-                    <SelectTrigger class="h-10 w-full bg-white sm:w-40">
-                        <SelectValue placeholder="Semua Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="Semua Status">Semua Status</SelectItem>
-                        <SelectItem value="Menunggu">Menunggu</SelectItem>
-                        <SelectItem value="Disetujui">Disetujui</SelectItem>
-                        <SelectItem value="Ditolak">Ditolak</SelectItem>
-                        <SelectItem value="Dipinjam">Dipinjam</SelectItem>
-                    </SelectContent>
-                </Select>
-
-                <Button @click="router.push('/admin/peminjaman-form')" class="gap-2">
-                    <Plus :size="20" />
-                    Tambah Peminjaman
-                </Button>
+            <!-- Filter Status Pills -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button v-for="opsi in opsiStatus" :key="opsi" type="button"
+                    class="rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors" :class="statusTerpilih === opsi
+                            ? 'bg-black text-white shadow-xs'
+                            : 'border border-[#dfe3e8] bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        " @click="statusTerpilih = opsi">
+                    {{ opsi }}
+                </button>
             </div>
         </div>
 
-        <p v-if="errorMessage" role="alert" class="mb-4 text-sm text-red-600">
-            {{ errorMessage }}
-        </p>
+        <!-- Error Alert -->
+        <div v-if="errorMessage" role="alert"
+            class="mt-6 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <AlertCircle :size="20" class="shrink-0" />
+            <span>{{ errorMessage }}</span>
+        </div>
 
-        <Table
-            :peminjaman="peminjamanDitampilkan"
-            :loading="loading"
-            @edit="editPeminjaman"
-            @delete="hapusItemPeminjaman"
-        />
-    </div>
+        <!-- Tabel Peminjaman -->
+        <div class="mt-6">
+            <Table :peminjaman="peminjamanPaginasi" :loading="loading" :halaman-saat-ini="halamanSaatIni"
+                :total-halaman="totalHalaman" :info-rentang="infoRentangData" @edit="editPeminjaman"
+                @delete="hapusItemPeminjaman" @ganti-halaman="halamanSaatIni = $event" />
+        </div>
+    </main>
 </template>

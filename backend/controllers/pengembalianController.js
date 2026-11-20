@@ -17,7 +17,10 @@ function parseTanggal(value) {
     } else {
         match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text)
         if (!match) return null
-        [ y, m, d] = match
+        const [, parsedYear, parsedMonth, parsedDay] = match
+        y = parsedYear
+        m = parsedMonth
+        d = parsedDay
     }
     const date = new Date(Date.UTC(Number(y), Number(m) - 1, Number(d)))
     if (
@@ -69,10 +72,13 @@ async function generateKode() {
     return `PK-${String(counter.sequence).padStart(3, '0')}`
 }
 
-function tambahStok(alatId, jumlah) {
-    return Alat.updateOne({ _id: alatId }, [
-        { $set: { tersedia: { $min: ['$jumlah', { $add: ['$tersedia', jumlah] }] } } },
-    ])
+async function tambahStok(alatId, jumlah) {
+    const alat = await Alat.findById(alatId).select('jumlah tersedia')
+    if (!alat) return false
+
+    const tersedia = Math.min(alat.jumlah, alat.tersedia + jumlah)
+    await Alat.updateOne({ _id: alatId }, { $set: { tersedia } })
+    return true
 }
 
 function validasiPenilaian(body) {
@@ -297,6 +303,20 @@ module.exports = {
             if (peminjaman.status !== 'Disetujui') {
                 return res.status(400).json({ message: 'Hanya peminjaman yang disetujui yang dapat dikembalikan.' })
             }
+            const tanggalPengembalian = req.body.tanggal_pengembalian
+                ? parseTanggal(req.body.tanggal_pengembalian)
+                : hariIni()
+            if (!tanggalPengembalian) {
+                return res.status(400).json({ message: 'Tanggal pengembalian tidak valid.' })
+            }
+            const tanggalPinjam = parseTanggal(peminjaman.tanggal_pinjam)
+            if (tanggalPinjam && tanggalPengembalian < tanggalPinjam) {
+                return res.status(400).json({ message: 'Tanggal pengembalian tidak boleh sebelum tanggal pinjam.' })
+            }
+            if (req.body.keterangan !== undefined &&
+                (typeof req.body.keterangan !== 'string' || req.body.keterangan.trim().length > 500)) {
+                return res.status(400).json({ message: 'Catatan pengembalian maksimal 500 karakter.' })
+            }
             const item = await Pengembalian.create({
                 kode_pengembalian: await generateKode(),
                 peminjaman_id: peminjaman._id,
@@ -305,10 +325,11 @@ module.exports = {
                 nama_peminjam: peminjaman.nama_peminjam,
                 nama_alat: peminjaman.nama_alat,
                 jumlah: peminjaman.jumlah,
-                tanggal_pengembalian: hariIni(),
+                tanggal_pengembalian: tanggalPengembalian,
                 kondisi: 'Baik',
                 denda: 0,
                 status: 'Menunggu',
+                keterangan: req.body.keterangan?.trim() ?? '',
             })
             return res.status(201).json({ message: 'Pengembalian diajukan, menunggu petugas.', data: serialize(item) })
         } catch (error) {

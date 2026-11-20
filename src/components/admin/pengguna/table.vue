@@ -1,24 +1,12 @@
 <script setup>
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableFooter,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table'
-
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination'
-
+    ChevronLeft,
+    ChevronRight,
+    Pencil,
+    Trash2,
+    Users,
+} from 'lucide-vue-next'
 import Button from '@/components/ui/button/Button.vue'
-import { Pencil, Trash2 } from 'lucide-vue-next'
 
 defineProps({
     pengguna: {
@@ -29,170 +17,170 @@ defineProps({
         type: Boolean,
         default: false,
     },
+    halamanSaatIni: {
+        type: Number,
+        default: 1,
+    },
+    totalHalaman: {
+        type: Number,
+        default: 1,
+    },
+    infoRentang: {
+        type: Object,
+        default: () => ({ mulai: 0, akhir: 0, total: 0 }),
+    },
 })
 
-const emit = defineEmits(['edit', 'delete'])
+const emit = defineEmits(['edit', 'delete', 'ganti-halaman'])
 
-const editPengguna = (item) => {
-    emit('edit', item)
+function roleBadgeClass(role) {
+    const map = {
+        admin: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20',
+        petugas: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20',
+        peminjam: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20',
+    }
+    return map[String(role ?? '').toLowerCase()] ?? 'bg-gray-100 text-gray-700'
 }
 
-const hapusPengguna = (item) => {
-    emit('delete', item.id)
+function formatRole(role) {
+    if (!role) return '-'
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()
 }
 </script>
 
 <template>
-    <div
-        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
-    >
+    <section class="overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-xs">
         <div class="overflow-x-auto">
-            <Table class="w-full border-collapse">
-                <TableHeader class="bg-black hover:bg-black">
-                    <TableRow class="border-0 hover:bg-black">
-                        <TableHead class="h-12 px-10 text-xs font-semibold text-white">
-                            Id
-                        </TableHead>
+            <table class="w-full min-w-[850px] border-collapse text-left text-sm">
+                <thead>
+                    <tr class="border-b border-gray-200 bg-black text-xs font-semibold tracking-wider text-white">
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Nama Lengkap</th>
+                        <th class="px-6 py-4">Username</th>
+                        <th class="px-6 py-4">Email</th>
+                        <th class="px-6 py-4">Role</th>
+                        <th class="px-6 py-4 text-center">Aksi</th>
+                    </tr>
+                </thead>
 
-                        <TableHead class="h-12 text-xs font-semibold text-white">
-                            Nama Lengkap
-                        </TableHead>
+                <tbody class="divide-y divide-gray-100">
+                    <!-- Loading Skeleton -->
+                    <template v-if="loading && pengguna.length === 0">
+                        <tr v-for="n in 5" :key="n" class="animate-pulse">
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-14 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-36 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-24 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-4 w-44 rounded bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="h-6 w-20 rounded-full bg-gray-100" />
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="mx-auto h-8 w-20 rounded-lg bg-gray-100" />
+                            </td>
+                        </tr>
+                    </template>
 
-                        <TableHead class="h-12 text-xs font-semibold text-white">
-                            Username
-                        </TableHead>
+                    <!-- Empty State -->
+                    <tr v-else-if="pengguna.length === 0">
+                        <td colspan="6" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <Users :size="44" stroke-width="1.25" class="text-gray-400" />
+                                <p class="mt-3 text-base font-semibold text-gray-900">
+                                    Tidak ada data pengguna
+                                </p>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Belum ada pengguna terdaftar atau hasil pencarian tidak ditemukan.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
 
-                        <TableHead class="h-12 text-xs font-semibold text-white">
-                            Email
-                        </TableHead>
-
-                        <TableHead class="h-12 text-xs font-semibold text-white">
-                            Role
-                        </TableHead>
-
-                        <TableHead class="h-12 text-center text-xs font-semibold text-white">
-                            Aksi
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-
-                <TableBody>
-                    <TableRow
-                        v-for="item in pengguna"
-                        :key="item.id"
-                    >
-                        <TableCell class="px-10 w-0">
+                    <!-- Data Rows -->
+                    <tr v-for="item in pengguna" v-else :key="item.id" class="transition-colors hover:bg-gray-50/80">
+                        <td class="px-6 py-4 font-mono text-xs font-medium text-gray-500">
                             {{ item.id_pengguna ?? item.id }}
-                        </TableCell>
-
-                        <TableCell class="w-45">
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-gray-900">
                             {{ item.nama_lengkap }}
-                        </TableCell>
-
-                        <TableCell class="w-30">
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">
                             {{ item.username }}
-                        </TableCell>
-
-                        <TableCell class="w-55">
+                        </td>
+                        <td class="px-6 py-4 text-gray-600">
                             {{ item.email }}
-                        </TableCell>
-
-                        <TableCell class="w-35">
+                        </td>
+                        <td class="px-6 py-4">
                             <span
-                                :class="{
-                                    'inline-block rounded-lg bg-[#DEF7EC] px-3 py-1 text-[#03543F]':
-                                        item.role?.toLowerCase() === 'admin',
-
-                                    'inline-block rounded-lg bg-[#E1EFFE] px-3 py-1 text-[#1E429F]':
-                                        item.role?.toLowerCase() === 'petugas',
-
-                                    'inline-block rounded-lg bg-[#FDE8E8] px-3 py-1 text-[#9B1C1C]':
-                                        item.role?.toLowerCase() === 'peminjam',
-                                }"
-                            >
-                                {{ item.role }}
+                                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold whitespace-nowrap"
+                                :class="roleBadgeClass(item.role)">
+                                {{ formatRole(item.role) }}
                             </span>
-                        </TableCell>
-
-                        <TableCell>
-                            <div class="flex justify-center items-center gap-2">
-                                <Button
-                                    size="icon"
-                                    class="bg-[#E1EFFE] rounded-full hover:bg-[#d2e7fd]"
-                                    @click="editPengguna(item)"
-                                >
-                                    <Pencil
-                                        class="h-4 w-4 text-[#0284C7]"
-                                    />
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <Button type="button" size="icon" variant="outline" title="Edit pengguna"
+                                    class="size-8 rounded-lg border-[#dfe3e8] bg-blue-50/60 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+                                    @click="emit('edit', item)">
+                                    <Pencil :size="14" />
                                 </Button>
 
-                                <Button
-                                    size="icon"
-                                    class="bg-[#FEE2E2] rounded-full hover:bg-[#fdd5d5]"
-                                    @click="hapusPengguna(item)"
-                                >
-                                    <Trash2
-                                        class="h-4 w-4 text-[#DC2626]"
-                                    />
+                                <Button type="button" size="icon" variant="outline" title="Hapus pengguna"
+                                    class="size-8 rounded-lg border-[#dfe3e8] bg-red-50/60 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                    @click="emit('delete', item.id)">
+                                    <Trash2 :size="14" />
                                 </Button>
                             </div>
-                        </TableCell>
-                    </TableRow>
-
-                    <TableRow v-if="loading && pengguna.length === 0">
-                        <TableCell colspan="6" class="py-6 text-center text-gray-500">
-                            Memuat data pengguna...
-                        </TableCell>
-                    </TableRow>
-
-                    <TableRow v-else-if="pengguna.length === 0">
-                        <TableCell
-                            colspan="6"
-                            class="py-6 text-center text-gray-500"
-                        >
-                            Belum ada data pengguna.
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-
-                <TableFooter>
-                    <TableRow class="hover:bg-transparent">
-                        <TableCell colspan="6" class="p-0">
-                            <div class="flex w-full items-center px-10 py-3">
-                                <span class="text-sm text-gray-600 whitespace-nowrap">
-                                    Menampilkan
-                                    <span class="font-bold">
-                                        {{ pengguna.length }}
-                                    </span>
-                                    data pengguna
-                                </span>
-
-                                <div class="ml-auto">
-                                    <Pagination
-                                        :items-per-page="10"
-                                        :total="pengguna.length"
-                                        :default-page="1"
-                                        class="w-fit"
-                                    >
-                                        <PaginationContent class="flex items-center gap-1">
-                                            <PaginationPrevious />
-
-                                            <PaginationItem
-                                                :value="1"
-                                                :is-active="true"
-                                            >
-                                                1
-                                            </PaginationItem>
-
-                                            <PaginationNext />
-                                        </PaginationContent>
-                                    </Pagination>
-                                </div>
-                            </div>
-                        </TableCell>
-                    </TableRow>
-                </TableFooter>
-            </Table>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-    </div>
+
+        <!-- Pagination Footer -->
+        <div v-if="!loading && infoRentang.total > 0"
+            class="flex flex-col items-center justify-between gap-4 border-t border-gray-100 bg-white px-6 py-4 sm:flex-row">
+            <p class="text-xs text-gray-500">
+                Menampilkan
+                <span class="font-semibold text-gray-900">{{ infoRentang.mulai }}</span>
+                –
+                <span class="font-semibold text-gray-900">{{ infoRentang.akhir }}</span>
+                dari
+                <span class="font-semibold text-gray-900">{{ infoRentang.total }}</span>
+                pengguna
+            </p>
+
+            <div class="flex items-center gap-1.5">
+                <Button type="button" variant="outline" size="sm"
+                    class="h-8 rounded-lg border-[#dfe3e8] px-2.5 text-xs font-semibold text-gray-700 disabled:opacity-40"
+                    :disabled="halamanSaatIni <= 1" @click="emit('ganti-halaman', halamanSaatIni - 1)">
+                    <ChevronLeft :size="15" class="mr-0.5" />
+                    Sebelumnya
+                </Button>
+
+                <button v-for="nomor in totalHalaman" :key="nomor" type="button"
+                    class="flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition-colors"
+                    :class="halamanSaatIni === nomor
+                            ? 'bg-black text-white'
+                            : 'border border-[#dfe3e8] bg-white text-gray-700 hover:bg-gray-50'
+                        " @click="emit('ganti-halaman', nomor)">
+                    {{ nomor }}
+                </button>
+
+                <Button type="button" variant="outline" size="sm"
+                    class="h-8 rounded-lg border-[#dfe3e8] px-2.5 text-xs font-semibold text-gray-700 disabled:opacity-40"
+                    :disabled="halamanSaatIni >= totalHalaman" @click="emit('ganti-halaman', halamanSaatIni + 1)">
+                    Berikutnya
+                    <ChevronRight :size="15" class="ml-0.5" />
+                </Button>
+            </div>
+        </div>
+    </section>
 </template>

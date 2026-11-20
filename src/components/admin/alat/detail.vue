@@ -1,13 +1,12 @@
-
 <script setup>
+import { Package, X } from 'lucide-vue-next'
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
-
-import { X } from 'lucide-vue-next'
+import Button from '@/components/ui/button/Button.vue'
 
 defineProps({
     open: Boolean,
@@ -18,103 +17,91 @@ defineProps({
 })
 
 const emit = defineEmits(['update:open'])
+
+function statusBadgeClass(status) {
+    return String(status ?? '').toLowerCase() === 'tersedia'
+        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/20'
+        : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+}
 </script>
 
 <template>
-    <Dialog
-        :open="open"
-        @update:open="emit('update:open', $event)"
-    >
-        <DialogContent
-            class="sm:max-w-[850px] w-[95vw] p-0 gap-0 overflow-hidden rounded-[24px] border border-gray-300"
-            :show-close-button="false"
-        >
+    <Dialog :open="open" @update:open="emit('update:open', $event)">
+        <DialogContent class="w-[95vw] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-3xl [&>button]:hidden">
             <!-- Header -->
-            <DialogHeader
-                class="flex flex-row items-center justify-between px-8 py-6 border-b border-gray-300"
-            >
-                <DialogTitle class="text-2xl font-black tracking-[0.12em]">
+            <DialogHeader class="flex flex-row items-center justify-between border-b border-gray-100 px-6 py-5 sm:px-8">
+                <DialogTitle class="font-display text-lg font-bold tracking-wide text-gray-900 sm:text-xl">
                     DETAIL ALAT
                 </DialogTitle>
 
-                <button
-                    type="button"
-                    class="text-black hover:text-gray-500"
-                    @click="emit('update:open', false)"
-                >
-                    <X :size="30" :stroke-width="3" />
+                <button type="button"
+                    class="rounded-full p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                    aria-label="Tutup modal" @click="emit('update:open', false)">
+                    <X :size="20" />
                 </button>
             </DialogHeader>
 
-            <div
-                v-if="alat"
-                class="grid grid-cols-1 md:grid-cols-[280px_1fr] gap-8 md:gap-12 p-8 md:p-10"
-            >
-                <div
-                    class="flex items-center justify-center w-full h-[280px] rounded-[24px] border-[10px] border-gray-100 overflow-hidden"
-                >
-                    <img
-                        v-if="alat.gambar"
-                        :src="alat.gambar"
-                        :alt="alat.nama_alat"
-                        class="w-full h-full object-contain"
-                    />
+            <div v-if="alat" class="px-6 py-7 sm:px-8">
+                <div class="grid items-center gap-8 sm:grid-cols-[230px_1fr]">
+                    <!-- Gambar Alat -->
+                    <div
+                        class="flex h-52 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-gray-100 bg-[#F8F9FA] p-4 sm:h-56">
+                        <img v-if="alat.gambar" :src="alat.gambar" :alt="alat.nama_alat"
+                            class="h-full w-full object-contain" />
+                        <Package v-else :size="64" stroke-width="1.35" class="text-gray-400" />
+                    </div>
 
-                    <span v-else class="text-sm text-gray-400">
-                        Gambar tidak tersedia
-                    </span>
+                    <!-- Spesifikasi Detail -->
+                    <dl class="grid grid-cols-[120px_14px_1fr] gap-y-3.5 text-sm">
+                        <dt class="text-gray-500">Nama Alat</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-semibold text-gray-900">{{ alat.nama_alat }}</dd>
+
+                        <dt class="text-gray-500">Kode Alat</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-mono font-semibold text-gray-900">{{ alat.kode_alat }}</dd>
+
+                        <dt class="text-gray-500">Kategori</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-semibold text-gray-900">{{ alat.kategori }}</dd>
+
+                        <dt class="text-gray-500">Total Stok</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-semibold text-gray-900">{{ alat.jumlah }} unit</dd>
+
+                        <dt class="text-gray-500">Tersedia</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-semibold text-gray-900">{{ alat.tersedia }} unit</dd>
+
+                        <dt class="text-gray-500">Kondisi</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-semibold text-gray-900">{{ alat.kondisi || '-' }}</dd>
+
+                        <dt class="text-gray-500">Status</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd>
+                            <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-bold"
+                                :class="statusBadgeClass(alat.status)">
+                                {{ alat.status }}
+                            </span>
+                        </dd>
+
+                        <dt class="text-gray-500">Deskripsi</dt>
+                        <span class="text-gray-400">:</span>
+                        <dd class="font-medium leading-relaxed text-gray-800">
+                            {{ alat.deskripsi || '-' }}
+                        </dd>
+                    </dl>
                 </div>
 
-                <div class="space-y-4 text-base">
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Nama Alat</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.nama_alat }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">ID Alat</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.kode_alat }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Kategori</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.kategori }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Stok</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.jumlah }} unit</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Tersedia</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.tersedia }} unit</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Kondisi</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.kondisi || '-' }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Status</span>
-                        <span>:</span>
-                        <span class="font-semibold">{{ alat.status }}</span>
-                    </div>
-
-                    <div class="grid grid-cols-[130px_10px_1fr] gap-3">
-                        <span class="text-gray-500">Deskripsi</span>
-                        <span>:</span>
-                        <span class="font-semibold">
-                            {{ alat.deskripsi || '-' }}
-                        </span>
-                    </div>
+                <!-- Footer Tombol Tutup -->
+                <div class="mt-7 flex justify-end border-t border-gray-100 pt-5">
+                    <Button type="button" variant="outline"
+                        class="h-10 rounded-xl border-[#dfe3e8] px-4 font-semibold text-gray-700"
+                        @click="emit('update:open', false)">
+                        <X :size="16" class="mr-1.5" />
+                        Tutup
+                    </Button>
                 </div>
             </div>
         </DialogContent>

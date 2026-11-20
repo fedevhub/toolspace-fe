@@ -173,7 +173,9 @@ const alatController = {
 
     list: async (_req, res) => {
         try {
-            const alat = await Alat.find().select('-gambar').sort({ createdAt: -1 })
+            // Gambar diperlukan pada kartu daftar alat untuk peminjam. Validasi ukuran
+            // dilakukan saat simpan, sehingga aman dikirim bersama data publik alat.
+            const alat = await Alat.find().sort({ createdAt: -1 })
             return res.json(alat.map(serializeAlat))
         } catch (error) {
             return handleAlatError(error, res, 'mengambil data alat')
